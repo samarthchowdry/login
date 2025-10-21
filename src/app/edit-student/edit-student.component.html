@@ -1,0 +1,71 @@
+<div class="edit-student-container">
+  <div class="form-header">
+    <h2>Edit Student</h2>
+    <p>Update the student information below.</p>
+    <a routerLink="/student-list" class="back-link">← Back to Student List</a>
+  </div>
+
+  <div class="loading" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Loading student data...</p>
+  </div>
+
+  <form [formGroup]="studentForm" (ngSubmit)="onSubmit()" class="student-form" *ngIf="!isLoading">
+    <div class="form-row">
+      <div class="form-group">
+        <label for="name">Name *</label>
+        <input
+          type="text"
+          id="name"
+          formControlName="name"
+          placeholder="Enter student name"
+          [class.error]="getFieldError('name')"
+        />
+        <div class="error-message" *ngIf="getFieldError('name')">
+          {{ getFieldError('name') }}
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="dob">Date of Birth *</label>
+        <input
+          type="date"
+          id="dob"
+          formControlName="dob"
+          [class.error]="getFieldError('dob')"
+          placeholder="YYYY-MM-DD"
+        />
+        <small class="form-hint">Format: YYYY-MM-DD</small>
+        <div class="error-message" *ngIf="getFieldError('dob')">
+          {{ getFieldError('dob') }}
+        </div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button
+        type="submit"
+        [disabled]="isSubmitting"
+        class="submit-btn"
+      >
+        <span *ngIf="!isSubmitting">Update Student</span>
+        <span *ngIf="isSubmitting">Updating...</span>
+      </button>
+      
+      <button
+        type="button"
+        (click)="studentForm.reset()"
+        class="reset-btn"
+        [disabled]="isSubmitting"
+      >
+        Reset Form
+      </button>
+
+      <a routerLink="/student-list" class="cancel-btn">Cancel</a>
+    </div>
+
+    <div class="submit-message" *ngIf="submitMessage" [class.success]="submitMessage.includes('successfully')" [class.error]="submitMessage.includes('Error')">
+      {{ submitMessage }}
+    </div>
+  </form>
+</div>
