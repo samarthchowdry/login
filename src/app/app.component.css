@@ -4,6 +4,7 @@ body {
   background-color: #f2f2f2;
 }
 
+/* Login Container Styles */
 .login-container {
   width: 300px;
   margin: 100px auto;
@@ -43,4 +44,118 @@ button {
 
 button:hover {
   background-color: #0056b3;
+}
+
+/* Main Application Layout */
+.app-container {
+  display: flex;
+  height: 100vh;
+  background-color: #f8f9fa;
+}
+
+/* Sidebar Styles */
+.sidebar {
+  width: 250px;
+  background-color: #343a40;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-header {
+  padding: 20px;
+  border-bottom: 1px solid #495057;
+}
+
+.sidebar-header h3 {
+  margin: 0;
+  color: #fff;
+  font-size: 1.2rem;
+}
+
+.nav-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex: 1;
+}
+
+.nav-item {
+  border-bottom: 1px solid #495057;
+}
+
+.nav-link {
+  display: block;
+  padding: 15px 20px;
+  color: #fff;
+  text-decoration: none;
+  transition: background-color 0.3s ease;
+}
+
+.nav-link:hover {
+  background-color: #495057;
+}
+
+.nav-link.router-link-active {
+  background-color: #007bff;
+}
+
+.sidebar-footer {
+  padding: 20px;
+  border-top: 1px solid #495057;
+}
+
+.logout-btn {
+  width: 100%;
+  padding: 10px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.logout-btn:hover {
+  background-color: #c82333;
+}
+
+/* Main Content Area */
+.main-content {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  background-color: #f8f9fa;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .app-container {
+    flex-direction: column;
+  }
+  
+  .sidebar {
+    width: 100%;
+    height: auto;
+  }
+  
+  .nav-menu {
+    display: flex;
+    flex-direction: row;
+  }
+  
+  .nav-item {
+    border-bottom: none;
+    border-right: 1px solid #495057;
+  }
+  
+  .nav-link {
+    padding: 10px 15px;
+    font-size: 14px;
+  }
+  
+  .main-content {
+    padding: 15px;
+  }
 }
