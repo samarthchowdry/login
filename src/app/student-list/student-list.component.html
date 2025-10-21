@@ -1,0 +1,58 @@
+<div class="student-list-container">
+  <div class="header">
+    <h2>Student Management</h2>
+    <div class="header-actions">
+      <a routerLink="/items" class="btn btn-primary">Add New Student</a>
+      <button (click)="loadStudents()" class="btn btn-secondary">Refresh</button>
+    </div>
+  </div>
+
+  <div class="loading" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Loading students...</p>
+  </div>
+
+  <div class="error" *ngIf="errorMessage">
+    <p>{{ errorMessage }}</p>
+    <button (click)="loadStudents()" class="btn btn-secondary">Retry</button>
+  </div>
+
+  <div class="students-table" *ngIf="!isLoading && !errorMessage">
+    <div class="table-header">
+      <h3>All Students ({{ students.length }})</h3>
+    </div>
+
+    <div class="table-container" *ngIf="students.length > 0">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Date of Birth</th>
+            <th>Age</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let student of students">
+            <td>{{ student.id }}</td>
+            <td>{{ student.name }}</td>
+            <td>{{ formatDate(student.dob) }}</td>
+            <td>{{ calculateAge(student.dob) }}</td>
+            <td class="actions">
+              <a [routerLink]="['/edit-student', student.id]" class="btn btn-edit">Edit</a>
+              <button (click)="deleteStudent(student.id!)" class="btn btn-delete">Delete</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="empty-state" *ngIf="students.length === 0">
+      <div class="empty-icon">📚</div>
+      <h3>No Students Found</h3>
+      <p>Start by adding your first student!</p>
+      <a routerLink="/items" class="btn btn-primary">Add First Student</a>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,64 @@
+<div class="items-container">
+  <div class="form-header">
+    <h2>Add New Student</h2>
+    <p>Fill out the form below to add a new student to the database.</p>
+    <a routerLink="/student-list" class="back-link">← View All Students</a>
+  </div>
+
+  <form [formGroup]="itemForm" (ngSubmit)="onSubmit()" class="item-form">
+    <div class="form-row">
+      <div class="form-group">
+        <label for="name">Name *</label>
+        <input
+          type="text"
+          id="name"
+          formControlName="name"
+          placeholder="Enter student name"
+          [class.error]="getFieldError('name')"
+        />
+        <div class="error-message" *ngIf="getFieldError('name')">
+          {{ getFieldError('name') }}
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="dob">Date of Birth *</label>
+        <input
+          type="date"
+          id="dob"
+          formControlName="dob"
+          [class.error]="getFieldError('dob')"
+          placeholder="YYYY-MM-DD"
+        />
+        <small class="form-hint">Format: YYYY-MM-DD (will be saved to studentdb)</small>
+        <div class="error-message" *ngIf="getFieldError('dob')">
+          {{ getFieldError('dob') }}
+        </div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button
+        type="submit"
+        [disabled]="isSubmitting"
+        class="submit-btn"
+      >
+        <span *ngIf="!isSubmitting">Save Student</span>
+        <span *ngIf="isSubmitting">Saving...</span>
+      </button>
+      
+      <button
+        type="button"
+        (click)="itemForm.reset()"
+        class="reset-btn"
+        [disabled]="isSubmitting"
+      >
+        Reset Form
+      </button>
+    </div>
+
+    <div class="submit-message" *ngIf="submitMessage" [class.success]="submitMessage.includes('successfully')" [class.error]="submitMessage.includes('Error')">
+      {{ submitMessage }}
+    </div>
+  </form>
+</div>
