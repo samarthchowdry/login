@@ -42,6 +42,52 @@
       </div>
     </div>
 
+    <div class="form-row">
+      <div class="form-group">
+        <label for="email">Email *</label>
+        <input
+          type="email"
+          id="email"
+          formControlName="email"
+          placeholder="Enter student email"
+          [class.error]="getFieldError('email')"
+        />
+        <div class="error-message" *ngIf="getFieldError('email')">
+          {{ getFieldError('email') }}
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="branch">Branch *</label>
+        <input
+          type="text"
+          id="branch"
+          formControlName="branch"
+          placeholder="Enter student branch"
+          [class.error]="getFieldError('branch')"
+        />
+        <div class="error-message" *ngIf="getFieldError('branch')">
+          {{ getFieldError('branch') }}
+        </div>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group full-width">
+        <label for="address">Address *</label>
+        <textarea
+          id="address"
+          formControlName="address"
+          placeholder="Enter student address"
+          rows="3"
+          [class.error]="getFieldError('address')"
+        ></textarea>
+        <div class="error-message" *ngIf="getFieldError('address')">
+          {{ getFieldError('address') }}
+        </div>
+      </div>
+    </div>
+
     <div class="form-actions">
       <button
         type="submit"
