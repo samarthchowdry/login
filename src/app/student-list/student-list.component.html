@@ -28,6 +28,8 @@
           <tr>
             <th>ID</th>
             <th>Name</th>
+            <th>Email</th>
+            <th>Branch</th>
             <th>Date of Birth</th>
             <th>Age</th>
             <th>Actions</th>
@@ -37,6 +39,8 @@
           <tr *ngFor="let student of students">
             <td>{{ student.id }}</td>
             <td>{{ student.name }}</td>
+            <td>{{ student.email }}</td>
+            <td>{{ student.branch }}</td>
             <td>{{ formatDate(student.dob) }}</td>
             <td>{{ calculateAge(student.dob) }}</td>
             <td class="actions">

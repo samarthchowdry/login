@@ -26,7 +26,10 @@ export class EditStudentComponent implements OnInit {
   ) {
     this.studentForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
-      dob: ['', [Validators.required, this.dateValidator.bind(this)]]
+      dob: ['', [Validators.required, this.dateValidator.bind(this)]],
+      email: ['', [Validators.required, Validators.email]],
+      address: ['', [Validators.required, Validators.minLength(5)]],
+      branch: ['', [Validators.required, Validators.minLength(2)]]
     });
   }
 
@@ -41,7 +44,10 @@ export class EditStudentComponent implements OnInit {
         next: (student) => {
           this.studentForm.patchValue({
             name: student.name,
-            dob: student.dob
+            dob: student.dob,
+            email: student.email,
+            address: student.address,
+            branch: student.branch
           });
           this.isLoading = false;
         },
@@ -125,6 +131,9 @@ export class EditStudentComponent implements OnInit {
       }
       if (field.errors['invalidDate']) {
         return 'Please enter a valid date (not in the future)';
+      }
+      if (field.errors['email']) {
+        return 'Please enter a valid email address';
       }
     }
     return '';

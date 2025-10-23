@@ -6,13 +6,16 @@ export interface Student {
   id?: number;
   name: string;
   dob: string;
+  email: string;
+  address: string;
+  branch: string;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class StudentService {
-  private apiUrl = 'http://localhost:8080/students';
+  private apiUrl = 'http://localhost:8080/students'; // Database: studentdb1, Table: students
 
   constructor(private http: HttpClient) { }
 

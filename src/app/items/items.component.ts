@@ -22,7 +22,10 @@ export class ItemsComponent implements OnInit {
   ) {
     this.itemForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
-      dob: ['', [Validators.required, this.dateValidator.bind(this)]]
+      dob: ['', [Validators.required, this.dateValidator.bind(this)]],
+      email: ['', [Validators.required, Validators.email]],
+      address: ['', [Validators.required, Validators.minLength(5)]],
+      branch: ['', [Validators.required, Validators.minLength(2)]]
     });
   }
 
@@ -66,12 +69,15 @@ export class ItemsComponent implements OnInit {
       console.log('Data format check:');
       console.log('- Name:', formData.name);
       console.log('- DOB:', formData.dob);
+      console.log('- Email:', formData.email);
+      console.log('- Address:', formData.address);
+      console.log('- Branch:', formData.branch);
       console.log('- DOB type:', typeof formData.dob);
       
       this.studentService.createStudent(formData).subscribe({
         next: (response) => {
-          console.log('Student saved successfully to studentdb:', response);
-          this.submitMessage = 'Student saved successfully to studentdb!';
+          console.log('Student saved successfully to studentdb1:', response);
+          this.submitMessage = 'Student saved successfully to studentdb1!';
           this.itemForm.reset();
           this.isSubmitting = false;
         },
@@ -81,7 +87,7 @@ export class ItemsComponent implements OnInit {
           console.error('Error message:', error.message);
           console.error('Error body:', error.error);
           
-          let errorMessage = 'Error saving student to studentdb. ';
+          let errorMessage = 'Error saving student to studentdb1. ';
           
           if (error.status === 0) {
             errorMessage += 'Cannot connect to server. Please check if your backend is running on http://localhost:8080';
@@ -117,17 +123,15 @@ export class ItemsComponent implements OnInit {
       if (field.errors['required']) {
         return `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} is required`;
       }
-      if (field.errors['email']) {
-        return 'Please enter a valid email address';
-      }
+     
       if (field.errors['minlength']) {
         return `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} must be at least ${field.errors['minlength'].requiredLength} characters`;
       }
-      if (field.errors['pattern']) {
-        return 'Please enter a valid phone number';
-      }
       if (field.errors['invalidDate']) {
         return 'Please enter a valid date (not in the future)';
+      }
+      if (field.errors['email']) {
+        return 'Please enter a valid email address';
       }
     }
     return '';
