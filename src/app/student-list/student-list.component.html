@@ -1,28 +1,43 @@
 <div class="student-list-container">
   <div class="header">
     <h2>Student Management</h2>
+
+    <!-- 🔹 Search Filters -->
+    <div class="search-area">
+      <input type="text" placeholder="Search by name" [(ngModel)]="filters.name">
+      <input type="email" placeholder="Search by email" [(ngModel)]="filters.email">
+      <input type="date" placeholder="Search by DOB" [(ngModel)]="filters.dob">
+      <input type="text" placeholder="Search by branch" [(ngModel)]="filters.branch">
+      <button (click)="onSearch()" class="btn btn-primary">Search</button>
+      <button (click)="onReset()" class="btn btn-secondary">Reset</button>
+    </div>
+
+    <!-- 🔹 Header Actions -->
     <div class="header-actions">
       <a routerLink="/items" class="btn btn-primary">Add New Student</a>
       <button (click)="loadStudents()" class="btn btn-secondary">Refresh</button>
     </div>
   </div>
 
+  <!-- 🔹 Loading State -->
   <div class="loading" *ngIf="isLoading">
     <div class="spinner"></div>
     <p>Loading students...</p>
   </div>
 
+  <!-- 🔹 Error State -->
   <div class="error" *ngIf="errorMessage">
     <p>{{ errorMessage }}</p>
     <button (click)="loadStudents()" class="btn btn-secondary">Retry</button>
   </div>
 
+  <!-- 🔹 Students Table -->
   <div class="students-table" *ngIf="!isLoading && !errorMessage">
     <div class="table-header">
-      <h3>All Students ({{ students.length }})</h3>
+      <h3>All Students ({{ filteredStudents.length }})</h3>
     </div>
 
-    <div class="table-container" *ngIf="students.length > 0">
+    <div class="table-container" *ngIf="filteredStudents.length > 0">
       <table>
         <thead>
           <tr>
@@ -36,7 +51,8 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let student of students">
+          <!-- 🔹 Only show paginated records -->
+          <tr *ngFor="let student of paginatedStudents">
             <td>{{ student.id }}</td>
             <td>{{ student.name }}</td>
             <td>{{ student.email }}</td>
@@ -50,13 +66,31 @@
           </tr>
         </tbody>
       </table>
+
+      <!-- 🔹 Pagination Controls -->
+      <div class="pagination">
+        <button (click)="prevPage()" [disabled]="currentPage === 1">Prev</button>
+
+        <button
+          *ngFor="let page of [].constructor(totalPages); let i = index"
+          (click)="goToPage(i + 1)"
+          [class.active]="currentPage === (i + 1)">
+          {{ i + 1 }}
+        </button>
+
+        <button (click)="nextPage()" [disabled]="currentPage === totalPages">Next</button>
+
+        <span class="page-info">
+          Page {{ currentPage }} of {{ totalPages }}
+        </span>
+      </div>
     </div>
 
-    <div class="empty-state" *ngIf="students.length === 0">
+    <!-- 🔹 Empty State -->
+    <div class="empty-state" *ngIf="filteredStudents.length === 0">
       <div class="empty-icon">📚</div>
-      <h3>No Students Found</h3>
-      <p>Start by adding your first student!</p>
-      <a routerLink="/items" class="btn btn-primary">Add First Student</a>
+      <h3>No Such Students Found</h3>
+      <a routerLink="/items" class="btn btn-primary">Add The Student to List</a>
     </div>
   </div>
 </div>
