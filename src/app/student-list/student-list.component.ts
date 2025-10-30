@@ -33,7 +33,7 @@ export class StudentListComponent implements OnInit {
     this.loadStudents();
   }
 
-  /** 🔹 Load Students from Backend */
+  /**  Load Students from Backend */
   loadStudents(): void {
     this.isLoading = true;
     this.errorMessage = '';

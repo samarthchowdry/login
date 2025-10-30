@@ -1,7 +1,7 @@
+
+<h2>Student Management</h2>
 <div class="student-list-container">
   <div class="header">
-    <h2>Student Management</h2>
-
     <!--Search Filters -->
     <div class="search-area">
       <input type="text" placeholder="Search by name"   [(ngModel)]="filters.name">
@@ -10,19 +10,18 @@
 
       <input type="date" placeholder="Search by DOB" [(ngModel)]="filters.dob">
 
-      <input type="text" placeholder="Search by branch" [(ngModel)]="filters.branch"><br>
-
-      <button (click)="onSearch()" class="btn btn-primary">Search</button>
-      
-      <button (click)="onReset()" class="btn btn-secondary">Reset</button>
-    </div>
-
-    <!-- Header Actions -->
+      <input type="text" placeholder="Search by branch" [(ngModel)]="filters.branch">
+     <button (click)="onSearch()" class="btn btn-primary">Search</button> <button (click)="onReset()" class="btn btn-secondary">Reset</button>
+    
     <div class="header-actions">
       <a routerLink="/items" class="btn btn-primary">Add New Student</a>
       <button (click)="loadStudents()" class="btn btn-secondary">Refresh</button>
     </div>
   </div>
+    
+    </div>
+
+   
 
   <!-- Loading State -->
   <div class="loading" *ngIf="isLoading">
@@ -30,13 +29,13 @@
     <p>Loading students...</p>
   </div>
 
-  <!-- 🔹 Error State -->
+  <!-- Error State -->
   <div class="error" *ngIf="errorMessage">
     <p>{{ errorMessage }}</p>
     <button (click)="loadStudents()" class="btn btn-secondary">Retry</button>
   </div>
 
-  <!-- 🔹 Students Table -->
+  <!-- Students Table -->
   <div class="students-table" *ngIf="!isLoading && !errorMessage">
     <div class="table-header">
       <h3>All Students ({{ filteredStudents.length }})</h3>
@@ -57,7 +56,7 @@
           </tr>
         </thead>
         <tbody>
-          <!-- 🔹 Only show paginated records -->
+          <!-- Only show paginated records -->
           <tr *ngFor="let student of paginatedStudents">
             <td>{{ student.id }}</td>
             <td>{{ student.name }}</td>
