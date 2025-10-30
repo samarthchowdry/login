@@ -83,6 +83,32 @@
       </div>
     </div>
 
+    <div class="form-row">
+      <div class="form-group full-width">
+        <label>Select Courses</label>
+        <div class="course-checkboxes" *ngIf="courses.length > 0; else noCourses">
+          <div class="course-checkbox-item" *ngFor="let course of courses">
+            <label class="checkbox-label">
+              <input
+                type="checkbox"
+                [checked]="isCourseSelected(course.id!)"
+                (change)="toggleCourse(course.id!)"
+                [value]="course.id">
+              <span class="checkbox-text">
+                <strong>{{ course.code }}</strong> - {{ course.name }}
+                <span *ngIf="course.credits" class="credits">({{ course.credits }} credits)</span>
+              </span>
+            </label>
+          </div>
+        </div>
+        <ng-template #noCourses>
+          <p class="no-courses-message">
+            No courses available. <a routerLink="/course-add">Create a course first</a>.
+          </p>
+        </ng-template>
+      </div>
+    </div>
+
     <div class="form-actions">
       <button
         type="submit"

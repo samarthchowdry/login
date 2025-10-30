@@ -2,24 +2,29 @@
   <div class="header">
     <h2>Student Management</h2>
 
-    <!-- 🔹 Search Filters -->
+    <!--Search Filters -->
     <div class="search-area">
-      <input type="text" placeholder="Search by name" [(ngModel)]="filters.name">
+      <input type="text" placeholder="Search by name"   [(ngModel)]="filters.name">
+
       <input type="email" placeholder="Search by email" [(ngModel)]="filters.email">
+
       <input type="date" placeholder="Search by DOB" [(ngModel)]="filters.dob">
-      <input type="text" placeholder="Search by branch" [(ngModel)]="filters.branch">
+
+      <input type="text" placeholder="Search by branch" [(ngModel)]="filters.branch"><br>
+
       <button (click)="onSearch()" class="btn btn-primary">Search</button>
+      
       <button (click)="onReset()" class="btn btn-secondary">Reset</button>
     </div>
 
-    <!-- 🔹 Header Actions -->
+    <!-- Header Actions -->
     <div class="header-actions">
       <a routerLink="/items" class="btn btn-primary">Add New Student</a>
       <button (click)="loadStudents()" class="btn btn-secondary">Refresh</button>
     </div>
   </div>
 
-  <!-- 🔹 Loading State -->
+  <!-- Loading State -->
   <div class="loading" *ngIf="isLoading">
     <div class="spinner"></div>
     <p>Loading students...</p>
@@ -45,6 +50,7 @@
             <th>Name</th>
             <th>Email</th>
             <th>Branch</th>
+            <th>Courses</th>
             <th>Date of Birth</th>
             <th>Age</th>
             <th>Actions</th>
@@ -57,17 +63,26 @@
             <td>{{ student.name }}</td>
             <td>{{ student.email }}</td>
             <td>{{ student.branch }}</td>
+            <td>
+              <span *ngIf="student.courseNames && student.courseNames.length > 0; else noCourses">
+                {{ student.courseNames.join(', ') }}
+              </span>
+              <ng-template #noCourses>
+                <span class="no-data">No courses enrolled</span>
+              </ng-template>
+            </td>
             <td>{{ formatDate(student.dob) }}</td>
             <td>{{ calculateAge(student.dob) }}</td>
             <td class="actions">
               <a [routerLink]="['/edit-student', student.id]" class="btn btn-edit">Edit</a>
+              <a [routerLink]="['/student-enroll', student.id]" class="btn btn-enroll">Enroll</a>
               <button (click)="deleteStudent(student.id!)" class="btn btn-delete">Delete</button>
             </td>
           </tr>
         </tbody>
       </table>
 
-      <!-- 🔹 Pagination Controls -->
+       <!-- Pagination Controls -->
       <div class="pagination">
         <button (click)="prevPage()" [disabled]="currentPage === 1">Prev</button>
 
@@ -85,10 +100,9 @@
         </span>
       </div>
     </div>
-
-    <!-- 🔹 Empty State -->
+<!-- empty state -->
     <div class="empty-state" *ngIf="filteredStudents.length === 0">
-      <div class="empty-icon">📚</div>
+      <div class="empty-icon"></div>
       <h3>No Such Students Found</h3>
       <a routerLink="/items" class="btn btn-primary">Add The Student to List</a>
     </div>

@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { StudentService } from '../services/student.service';
+import { CourseService, Course } from '../services/course.service';
 
 @Component({
   selector: 'app-items',
@@ -15,10 +16,13 @@ export class ItemsComponent implements OnInit {
   itemForm: FormGroup;
   isSubmitting = false;
   submitMessage = '';
+  courses: Course[] = [];
+  selectedCourseIds: number[] = [];
 
   constructor(
     private fb: FormBuilder,
-    private studentService: StudentService
+    private studentService: StudentService,
+    private courseService: CourseService
   ) {
     this.itemForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
@@ -50,6 +54,32 @@ export class ItemsComponent implements OnInit {
     // Log form initialization
     console.log('Form initialized with validators');
     console.log('Form controls:', this.itemForm.controls);
+    this.loadCourses();
+  }
+
+  loadCourses(): void {
+    this.courseService.getCourses({}).subscribe({
+      next: (courses) => {
+        this.courses = courses;
+        console.log('Courses loaded:', courses);
+      },
+      error: (error) => {
+        console.error('Error loading courses:', error);
+      }
+    });
+  }
+
+  toggleCourse(courseId: number): void {
+    const index = this.selectedCourseIds.indexOf(courseId);
+    if (index > -1) {
+      this.selectedCourseIds.splice(index, 1);
+    } else {
+      this.selectedCourseIds.push(courseId);
+    }
+  }
+
+  isCourseSelected(courseId: number): boolean {
+    return this.selectedCourseIds.includes(courseId);
   }
 
   onSubmit(): void {
@@ -64,6 +94,9 @@ export class ItemsComponent implements OnInit {
         const date = new Date(formData.dob);
         formData.dob = date.toISOString().split('T')[0]; // Format as YYYY-MM-DD
       }
+      
+      // Add selected course IDs
+      formData.courseIds = this.selectedCourseIds;
       
       console.log('Sending data to API:', formData);
       console.log('Data format check:');
