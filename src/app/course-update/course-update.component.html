@@ -1,0 +1,36 @@
+<div class="update-container" *ngIf="!isLoading; else loading">
+  <h2>Update Course</h2>
+
+  <form (ngSubmit)="onSubmit()" #f="ngForm" class="form-container">
+    <label>
+      <span>Name:</span>
+      <input type="text" [(ngModel)]="course.name" name="name" required />
+    </label>
+
+    <label>
+      <span>Code:</span>
+      <input type="text" [(ngModel)]="course.code" name="code" required />
+    </label>
+
+    <label>
+      <span>Description:</span>
+      <textarea [(ngModel)]="course.description" name="description"></textarea>
+    </label>
+
+    <label>
+      <span>Credits:</span>
+      <input type="number" [(ngModel)]="course.credits" name="credits" />
+    </label>
+
+    <div class="actions">
+      <button type="submit" class="btn btn-primary">Update</button>
+      <button type="button" class="btn btn-secondary" (click)="router.navigate(['/course-list'])">
+        Cancel
+      </button>
+    </div>
+  </form>
+</div>
+
+<ng-template #loading>
+  <p>Loading course details...</p>
+</ng-template>
