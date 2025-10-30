@@ -1,0 +1,103 @@
+<div class="course-list-container">
+  <div class="header">
+    <h2>Course Management</h2>
+
+    <!--Search Filters -->
+    <div class="search-area">
+      <input type="text" placeholder="Search by name" [(ngModel)]="filters.name">
+      
+      <input type="text" placeholder="Search by code" [(ngModel)]="filters.code">
+
+      <button (click)="onSearch()" class="btn btn-primary">Search</button>
+      
+      <button (click)="onReset()" class="btn btn-secondary">Reset</button>
+    </div>
+
+    <!-- Header Actions -->
+    <div class="header-actions">
+      <a routerLink="/course-add" class="btn btn-primary">Add New Course</a>
+      <button (click)="loadCourses()" class="btn btn-secondary">Refresh</button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Loading courses...</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="error" *ngIf="errorMessage">
+    <p>{{ errorMessage }}</p>
+    <button (click)="loadCourses()" class="btn btn-secondary">Retry</button>
+  </div>
+
+  <!-- Courses Table -->
+  <div class="courses-table" *ngIf="!isLoading && !errorMessage">
+    <div class="table-header">
+      <h3>All Courses ({{ filteredCourses.length }})</h3>
+    </div>
+
+  <div class="table-container" *ngIf="filteredCourses.length > 0">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Code</th>
+          <th>Description</th>
+          <th>Credits</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let course of paginatedCourses">
+          <td>{{ course.id }}</td>
+          <td>{{ course.name }}</td>
+          <td>{{ course.code }}</td>
+          <td>{{ course.description || 'N/A' }}</td>
+          <td>{{ course.credits || 'N/A' }}</td>
+          <td class="actions">
+            <button 
+              (click)="onUpdate(course.id!)" 
+              class="btn btn-primary">
+              Update
+            </button>
+            <button 
+              (click)="deleteCourse(course.id!)" 
+              class="btn btn-delete">
+              Delete
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Pagination Controls  -->
+    <div class="pagination">
+      <button (click)="prevPage()" [disabled]="currentPage === 1">Prev</button>
+
+      <button
+        *ngFor="let page of [].constructor(totalPages); let i = index"
+        (click)="goToPage(i + 1)"
+        [class.active]="currentPage === (i + 1)">
+        {{ i + 1 }}
+      </button>
+
+      <button (click)="nextPage()" [disabled]="currentPage === totalPages">Next</button>
+
+      <span class="page-info">
+        Page {{ currentPage }} of {{ totalPages }}
+      </span>
+    </div>
+  </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="filteredCourses.length === 0">
+      <div class="empty-icon"></div>
+      <h3>No Courses Found</h3>
+      <p>Add a course to get started</p>
+      <a routerLink="/course-add" class="btn btn-primary">Add New Course</a>
+    </div>
+  </div>
+</div>

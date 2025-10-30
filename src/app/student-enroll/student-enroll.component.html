@@ -1,0 +1,78 @@
+<div class="enrollment-container">
+  <div class="header">
+    <h2>Enroll in Courses</h2>
+    <p *ngIf="student" class="student-info">
+      Managing enrollment for: <strong>{{ student.name }}</strong> ({{ student.email }})
+    </p>
+  </div>
+
+  <div *ngIf="errorMessage" class="error-message">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="successMessage" class="success-message">
+    {{ successMessage }}
+  </div>
+
+  <div class="enrollment-stats" *ngIf="student">
+    <div class="stat-item">
+      <strong>Total Courses:</strong> {{ getTotalCount() }}
+    </div>
+    <div class="stat-item">
+      <strong>Enrolled Courses:</strong> {{ getEnrolledCount() }}
+    </div>
+  </div>
+
+  <div class="courses-section">
+    <h3>Available Courses</h3>
+    <div *ngIf="allCourses.length === 0" class="no-courses">
+      <p>No courses available. <a routerLink="/course-add">Create a course first</a>.</p>
+    </div>
+
+    <div class="courses-grid" *ngIf="allCourses.length > 0">
+      <div 
+        class="course-card" 
+        *ngFor="let course of allCourses"
+        [class.enrolled]="isEnrolled(course.id!)"
+        (click)="toggleEnrollment(course.id!)">
+        <div class="course-header">
+          <h4>{{ course.name }}</h4>
+          <span class="enrollment-badge" *ngIf="isEnrolled(course.id!)">Enrolled</span>
+        </div>
+        <div class="course-details">
+          <p class="course-code"><strong>Code:</strong> {{ course.code }}</p>
+          <p class="course-credits" *ngIf="course.credits"><strong>Credits:</strong> {{ course.credits }}</p>
+          <p class="course-description" *ngIf="course.description">{{ course.description }}</p>
+          <p class="course-students" *ngIf="course.studentNames && course.studentNames.length > 0">
+            <strong>Other Enrolled Students:</strong> {{ course.studentNames.length }}
+          </p>
+        </div>
+        <div class="course-action">
+          <button 
+            class="btn-enroll"
+            [class.btn-unenroll]="isEnrolled(course.id!)"
+            (click)="toggleEnrollment(course.id!); $event.stopPropagation()">
+            {{ isEnrolled(course.id!) ? '✓ Enrolled' : '+ Enroll' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button 
+      class="btn btn-primary" 
+      (click)="saveEnrollment()" 
+      [disabled]="isLoading">
+      <span *ngIf="!isLoading">Save Enrollment</span>
+      <span *ngIf="isLoading">Saving...</span>
+    </button>
+    <button 
+      class="btn btn-secondary" 
+      (click)="cancel()" 
+      [disabled]="isLoading">
+      Cancel
+    </button>
+  </div>
+</div>
+
