@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { StudentService, Student } from '../services/student.service';
 import { FormsModule } from '@angular/forms';
+import { StudentService, Student } from '../services/student.service';
 
 @Component({
   selector: 'app-student-list',
@@ -13,11 +13,10 @@ import { FormsModule } from '@angular/forms';
 })
 export class StudentListComponent implements OnInit {
   students: Student[] = [];
-  filteredStudents: Student[] = []; // Used for pagination
+  filteredStudents: Student[] = [];
   isLoading = false;
   errorMessage = '';
 
-  // 🔹 Filters for search
   filters = {
     name: '',
     dob: '',
@@ -25,7 +24,6 @@ export class StudentListComponent implements OnInit {
     branch: ''
   };
 
-  // 🔹 Pagination variables
   currentPage = 1;
   itemsPerPage = 10;
 
@@ -35,7 +33,7 @@ export class StudentListComponent implements OnInit {
     this.loadStudents();
   }
 
-  // 🔹 Load students from backend with filters
+  /** 🔹 Load Students from Backend */
   loadStudents(): void {
     this.isLoading = true;
     this.errorMessage = '';
@@ -45,8 +43,8 @@ export class StudentListComponent implements OnInit {
         this.students = students;
         this.filteredStudents = [...this.students];
         this.isLoading = false;
-        this.currentPage = 1; // reset pagination
-        console.log('Students loaded:', students);
+        this.currentPage = 1;
+        console.log(' Students loaded:', students);
       },
       error: (error) => {
         console.error('Error loading students:', error);
@@ -56,12 +54,12 @@ export class StudentListComponent implements OnInit {
     });
   }
 
-  // 🔹 Called when Search button is clicked
+  //Search Button Click 
   onSearch(): void {
     this.loadStudents();
   }
 
-  // 🔹 Called when Reset button is clicked
+  //Reset Filters 
   onReset(): void {
     this.filters = {
       name: '',
@@ -72,7 +70,7 @@ export class StudentListComponent implements OnInit {
     this.loadStudents();
   }
 
-  // 🔹 Pagination Logic
+  //Pagination Logic 
   get totalPages(): number {
     return Math.ceil(this.filteredStudents.length / this.itemsPerPage);
   }
@@ -95,28 +93,39 @@ export class StudentListComponent implements OnInit {
     if (page >= 1 && page <= this.totalPages) this.currentPage = page;
   }
 
-  // 🔹 Delete student
+  // Delete Student
   deleteStudent(id: number): void {
-    if (confirm('Are you sure you want to delete this student?')) {
-      this.studentService.deleteStudent(id).subscribe({
-        next: () => {
-          console.log('Student deleted successfully');
-          this.loadStudents();
-        },
-        error: (error) => {
-          console.error('Error deleting student:', error);
-          alert('Error deleting student. Please try again.');
+    if (!confirm('Are you sure you want to delete this student?')) return;
+
+    this.studentService.deleteStudent(id).subscribe({
+      next: () => {
+        console.log(`Student with ID ${id} deleted successfully`);
+
+        // Remove deleted student locally (avoids reloading)
+        this.students = this.students.filter(student => student.id !== id);
+        this.filteredStudents = this.filteredStudents.filter(student => student.id !== id);
+
+        // Adjust pagination safely
+        if (this.currentPage > this.totalPages) {
+          this.currentPage = this.totalPages || 1;
         }
-      });
-    }
+
+        alert('Student deleted successfully.');
+      },
+      error: (error) => {
+        console.error('Error deleting student:', error);
+        alert('Error deleting student. Please try again.');
+      }
+    });
   }
 
-  // 🔹 Utility methods
+  // Utility: Format Date 
   formatDate(dateString: string): string {
     const date = new Date(dateString);
     return date.toLocaleDateString();
   }
 
+  // Utility: Calculate Age 
   calculateAge(dateString: string): number {
     const today = new Date();
     const birthDate = new Date(dateString);
