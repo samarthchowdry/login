@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { StudentService } from '../services/student.service';
 import { CourseService, Course } from '../services/course.service';
+import { AuthRoleService } from '../services/auth-role.service';
 
 @Component({
   selector: 'app-items',
@@ -22,7 +23,9 @@ export class ItemsComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private studentService: StudentService,
-    private courseService: CourseService
+    private courseService: CourseService,
+    private authRoleService: AuthRoleService,
+    private router: Router
   ) {
     this.itemForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
@@ -51,6 +54,12 @@ export class ItemsComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    const role = this.authRoleService.getRole();
+    if (role !== 'ADMIN' && role !== 'TEACHER') {
+      alert('You do not have permission to add students.');
+      this.router.navigate(['/student-list']);
+      return;
+    }
     // Log form initialization
     console.log('Form initialized with validators');
     console.log('Form controls:', this.itemForm.controls);

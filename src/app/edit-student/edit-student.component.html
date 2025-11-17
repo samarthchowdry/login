@@ -114,4 +114,143 @@
       {{ submitMessage }}
     </div>
   </form>
+
+  <section class="marks-section" *ngIf="!isLoading">
+    <h3>Assessment Records</h3>
+    <p class="section-subtitle">Add and review marks recorded for this student.</p>
+
+    <form [formGroup]="markForm" (ngSubmit)="onAddMark()" class="mark-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Subject *</label>
+          <ng-container *ngIf="enrolledCourses.length > 0; else subjectTextInput">
+            <select formControlName="subject">
+              <option value="" disabled>Select a course</option>
+              <option *ngFor="let course of enrolledCourses" [value]="course.name">
+                {{ course.name }} ({{ course.code }})
+              </option>
+            </select>
+          </ng-container>
+          <ng-template #subjectTextInput>
+            <input type="text" formControlName="subject" placeholder="Subject or module" />
+          </ng-template>
+          <div class="error-message" *ngIf="markControls['subject'].touched && markControls['subject'].invalid">
+            Subject is required.
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Assessment</label>
+          <input type="text" formControlName="assessmentName" placeholder="Assessment name (optional)" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Score *</label>
+          <input type="number" formControlName="score" min="0" step="0.5" placeholder="Score earned" />
+          <div class="error-message" *ngIf="markControls['score'].touched && markControls['score'].invalid">
+            Score must be provided and non-negative.
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Max Score *</label>
+          <input
+            type="number"
+            formControlName="maxScore"
+            min="1"
+            step="0.5"
+            placeholder="Maximum score"
+            required
+          />
+          <div class="error-message" *ngIf="markControls['maxScore'].touched && markControls['maxScore'].invalid">
+            Max score is required and must be greater than zero.
+          </div>
+        </div>
+      </div>
+
+      <div class="auto-grade-note">
+        Grade is calculated automatically after you save the mark.
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Assessed On</label>
+          <input type="date" formControlName="assessedOn" />
+          <div class="error-message" *ngIf="markControls['assessedOn'].touched && markControls['assessedOn'].errors">
+            <ng-container *ngIf="markControls['assessedOn'].errors['futureDate']">
+              Assessment date cannot be in the future.
+            </ng-container>
+            <ng-container *ngIf="markControls['assessedOn'].errors['invalidDate']">
+              Please enter a valid assessment date.
+            </ng-container>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Recorded By</label>
+          <input type="text" formControlName="recordedBy" placeholder="Evaluator name (optional)" />
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" [disabled]="isMarkSubmitting">
+          <span *ngIf="!isMarkSubmitting">{{ isEditingMark ? 'Update Mark' : 'Add Mark' }}</span>
+          <span *ngIf="isMarkSubmitting">Saving...</span>
+        </button>
+        <button
+          type="button"
+          class="secondary"
+          *ngIf="isEditingMark"
+          (click)="cancelMarkEdit()"
+          [disabled]="isMarkSubmitting">
+          Cancel Edit
+        </button>
+      </div>
+
+      <div class="submit-message" *ngIf="markMessage" [class.success]="markMessage.includes('successfully')" [class.error]="markMessage.includes('Error')">
+        {{ markMessage }}
+      </div>
+    </form>
+
+    <div class="marks-table" *ngIf="marks.length > 0; else noMarks">
+      <table>
+        <thead>
+          <tr>
+            <th>Subject</th>
+            <th>Assessment</th>
+            <th>Score</th>
+            <th>Grade</th>
+            <th>Assessed On</th>
+            <th>Recorded By</th>
+            <th>Recorded At</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let mark of marks">
+            <td>{{ mark.subject }}</td>
+            <td>{{ mark.assessmentName || '—' }}</td>
+            <td>
+              {{ mark.score }}
+              <span *ngIf="mark.maxScore">/ {{ mark.maxScore }}</span>
+            </td>
+            <td>{{ mark.grade || '—' }}</td>
+            <td>{{ mark.assessedOn | date : 'mediumDate' }}</td>
+            <td>{{ mark.recordedBy || '—' }}</td>
+            <td>{{ mark.recordedAt | date : 'short' }}</td>
+            <td>
+              <button type="button" class="link-btn" (click)="startEditMark(mark)">Edit</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <ng-template #noMarks>
+      <div class="empty-state">
+        <p>No marks recorded yet. Use the form above to add the first entry.</p>
+      </div>
+    </ng-template>
+  </section>
 </div>

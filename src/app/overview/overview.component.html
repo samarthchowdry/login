@@ -1,0 +1,66 @@
+<div class="overview-container">
+  <div class="header-section">
+    <h1>Dashboard Overview</h1>
+    <p class="subtitle">Welcome to the Student Management System</p>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-item">
+      <span class="stat-label">{{ stats.students.label }}:</span>
+      <span class="stat-value">
+        <ng-container *ngIf="!statsLoading; else loadingStat">
+          {{ stats.students.value }}
+        </ng-container>
+      </span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">{{ stats.courses.label }}:</span>
+      <span class="stat-value">
+        <ng-container *ngIf="!statsLoading; else loadingStat">
+          {{ stats.courses.value }}
+        </ng-container>
+      </span>
+    </div>
+    <ng-template #loadingStat>
+      <span class="stat-loading">Loading…</span>
+    </ng-template>
+  </div>
+
+  <div *ngIf="statsError" class="error-message">
+    {{ statsError }}
+  </div>
+
+  <div class="quick-links">
+    <h2>Quick Access</h2>
+    <ul class="links-list">
+      <li *ngFor="let feature of features">
+        <a [routerLink]="feature.link" [queryParams]="feature.queryParams || null">
+          {{ feature.cta }}
+        </a>
+      </li>
+    </ul>
+  </div>
+
+  <div class="analytics-section" *ngIf="isAdmin">
+    <h2>Performance Summary</h2>
+    <div *ngIf="analyticsLoading" class="loading-message">
+      Processing Analytics...
+    </div>
+    <div *ngIf="analyticsError" class="error-message">
+      {{ analyticsError }}
+    </div>
+    <div class="analytics-list" *ngIf="!analyticsLoading && !analyticsError">
+      <div class="analytics-item" *ngFor="let slice of analyticsSummary">
+        <span class="range-label">{{ slice.label }}</span>
+        <span class="student-count">{{ slice.count }} students</span>
+      </div>
+      <div *ngIf="!analyticsSummary.length" class="empty-message">
+        No assessments recorded yet.
+      </div>
+    </div>
+    <div class="analytics-footer">
+      <a routerLink="/student-performance">View Full Performance Dashboard</a>
+    </div>
+  </div>
+</div>
+
