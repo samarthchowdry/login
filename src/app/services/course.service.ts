@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { AuthRoleService } from './auth-role.service';
 
 export interface Course {
   id?: number;
@@ -18,7 +19,7 @@ export interface Course {
 export class CourseService {
   private apiUrl = 'http://localhost:8080/courses'; 
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private authRoleService: AuthRoleService) {}
 
   getCourses(filters: {
     name?: string;
@@ -41,27 +42,52 @@ export class CourseService {
   }
 
   createCourse(course: Course): Observable<Course> {
-    return this.http.post<Course>(this.apiUrl, course);
+    return this.http.post<Course>(
+      this.apiUrl,
+      course,
+      this.authRoleService.createRoleOptions()
+    );
   }
 
   updateCourse(id: number, course: Course): Observable<Course> {
-    return this.http.put<Course>(`${this.apiUrl}/${id}`, course);
+    return this.http.put<Course>(
+      `${this.apiUrl}/${id}`,
+      course,
+      this.authRoleService.createRoleOptions()
+    );
   }
 
   deleteCourse(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+    return this.http.delete<void>(
+      `${this.apiUrl}/${id}`,
+      this.authRoleService.createRoleOptions()
+    );
   }
 
   addStudentToCourse(courseId: number, studentId: number): Observable<Course> {
-    return this.http.post<Course>(`${this.apiUrl}/${courseId}/students/${studentId}`, {});
+    return this.http.post<Course>(
+      `${this.apiUrl}/${courseId}/students/${studentId}`,
+      {},
+      this.authRoleService.createRoleOptions()
+    );
   }
 
   removeStudentFromCourse(courseId: number, studentId: number): Observable<Course> {
-    return this.http.delete<Course>(`${this.apiUrl}/${courseId}/students/${studentId}`);
+    return this.http.delete<Course>(
+      `${this.apiUrl}/${courseId}/students/${studentId}`,
+      this.authRoleService.createRoleOptions()
+    );
   }
 
   getCoursesByStudent(studentId: number): Observable<Course[]> {
-    return this.http.get<Course[]>(`${this.apiUrl}/student/${studentId}`);
+    return this.http.get<Course[]>(
+      `${this.apiUrl}/student/${studentId}`,
+      this.authRoleService.createRoleOptions()
+    );
+  }
+
+  getCoursesCount(): Observable<number> {
+    return this.http.get<number>(`${this.apiUrl}/count`);
   }
 }
 

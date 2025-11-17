@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { CourseService, Course } from '../services/course.service';
 import { StudentService, Student } from '../services/student.service';
+import { AuthRoleService } from '../services/auth-role.service';
 
 @Component({
   selector: 'app-student-enroll',
@@ -24,10 +25,17 @@ export class StudentEnrollComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private studentService: StudentService,
-    private courseService: CourseService
+    private courseService: CourseService,
+    private authRoleService: AuthRoleService
   ) {}
 
   ngOnInit(): void {
+    const role = this.authRoleService.getRole();
+    if (role !== 'ADMIN' && role !== 'TEACHER') {
+      alert('You do not have permission to manage enrollments.');
+      this.router.navigate(['/student-list']);
+      return;
+    }
     this.route.paramMap.subscribe(params => {
       const id = params.get('id');
       if (id) {
@@ -45,7 +53,7 @@ export class StudentEnrollComponent implements OnInit {
       next: (student) => {
         this.student = student;
         // Get currently enrolled course IDs
-        this.enrolledCourseIds = student.courseIds || [];
+        this.enrolledCourseIds = this.normalizeCourseIds(student.courseIds);
       },
       error: (error) => {
         console.error('Error loading student:', error);
@@ -72,6 +80,7 @@ export class StudentEnrollComponent implements OnInit {
       this.enrolledCourseIds.splice(index, 1);
     } else {
       this.enrolledCourseIds.push(courseId);
+      this.enrolledCourseIds = this.normalizeCourseIds(this.enrolledCourseIds);
     }
   }
 
@@ -79,11 +88,22 @@ export class StudentEnrollComponent implements OnInit {
     return this.enrolledCourseIds.includes(courseId);
   }
 
+  onCourseCardClick(courseId: number): void {
+    this.toggleEnrollment(courseId);
+  }
+
+  onEnrollButtonClick(courseId: number, event: Event): void {
+    event.stopPropagation();
+    this.toggleEnrollment(courseId);
+  }
+
   saveEnrollment(): void {
     if (!this.studentId || !this.student) {
       this.errorMessage = 'Student information is missing';
       return;
     }
+
+    this.enrolledCourseIds = this.normalizeCourseIds(this.enrolledCourseIds);
 
     this.isLoading = true;
     this.errorMessage = '';
@@ -147,6 +167,18 @@ export class StudentEnrollComponent implements OnInit {
 
   getTotalCount(): number {
     return this.allCourses.length;
+  }
+
+  private normalizeCourseIds(ids: (number | null | undefined)[] | undefined): number[] {
+    if (!ids || ids.length === 0) {
+      return [];
+    }
+    return Array.from(
+      new Set(
+        ids
+          .filter((id): id is number => typeof id === 'number' && !Number.isNaN(id))
+      )
+    );
   }
 }
 

@@ -1,32 +1,95 @@
-<div class="home-container">
-  <div class="welcome-section">
-    <h1>Welcome to the Student Management Dashboard</h1>
-    <p>You have successfully logged in to the application.</p>
-  </div>
-  
-  <div class="features-section">
-    <h2>Available Features</h2>
-    <div class="feature-cards">
-      <div class="feature-card">
-        <h3>Students Management</h3>
-        <p>View and manage students in the student database.</p>
-        <a routerLink="/student-list" class="feature-link">View Students List</a>
-      </div>
-      <div class="feature-card">
-        <h3>Courses Management</h3>
-        <p>View and manage courses with enrolled students.</p>
-        <a routerLink="/course-list" class="feature-link">View Courses List</a>
-      </div>
-      <div class="feature-card">
-        <h3>Add New Student</h3>
-        <p>Add a new student to the database.</p>
-        <a routerLink="/items" class="feature-link">Add Student</a>
-      </div>
-      <div class="feature-card">
-        <h3>Add New Course</h3>
-        <p>Add a new course to the database.</p>
-        <a routerLink="/course-add" class="feature-link">Add Course</a>
+<ng-container *ngIf="!showAnalyticsPanel">
+  <div class="home-container">
+    <div class="welcome-section">
+      <h1>Welcome to the Student Management Dashboard</h1>
+      <p>You have successfully logged in to the application.</p>
+    </div>
+    
+    <div class="features-section">
+      <h2>Available Features</h2>
+      <div class="feature-cards">
+        <div class="feature-card">
+          <h3>Students Management</h3>
+          <p>View and manage students in the student database.</p>
+          <a routerLink="/student-list" class="feature-link">View Students List</a>
+        </div>
+        <div class="feature-card">
+          <h3>Courses Management</h3>
+          <p>View and manage courses with enrolled students.</p>
+          <a routerLink="/course-list" class="feature-link">View Courses List</a>
+        </div>
+        <div class="feature-card" *ngIf="canViewAnalytics">
+          <h3>Performance Insights</h3>
+          <p>Analyse assessment trends across every student and branch.</p>
+          <a routerLink="/student-performance" class="feature-link">Open Performance Dashboard</a>
+        </div>
+        <ng-container *ngIf="isAdmin">
+          <div class="feature-card">
+            <h3>Add New Student</h3>
+            <p>Add a new student to the database.</p>
+            <a routerLink="/items" class="feature-link">Add Student</a>
+          </div>
+          <div class="feature-card admin-card">
+            <h3>Role Management</h3>
+            <p>Promote users to admin and manage system roles.</p>
+            <app-role-management></app-role-management>
+          </div>
+          <div class="feature-card">
+            <h3>Add New Course</h3>
+            <p>Add a new course to the database.</p>
+            <a routerLink="/course-add" class="feature-link">Add Course</a>
+          </div>
+        </ng-container>
       </div>
     </div>
   </div>
-</div>
+</ng-container>
+
+<section
+  class="analytics-section"
+  *ngIf="canViewAnalytics && showAnalyticsPanel"
+>
+  <div class="analytics-header">
+    <h3>Complete Analytics</h3>
+    <p>Students with recorded assessments grouped by overall percentage.</p>
+  </div>
+
+  <div class="chart-container" *ngIf="analyticsLoading">
+    <div class="chart-loading">Loading analytics…</div>
+  </div>
+
+  <div class="chart-container" *ngIf="!analyticsLoading && analyticsError">
+    <div class="chart-error">{{ analyticsError }}</div>
+  </div>
+
+  <div class="chart-container" *ngIf="!analyticsLoading && !analyticsError">
+    <ng-container *ngIf="hasAnalyticsData; else emptyAnalytics">
+      <div class="bar-chart">
+        <div class="y-axis">
+          <div class="y-label">No. of Students</div>
+          <div class="tick" *ngFor="let tick of yAxisTicks">{{ tick }}</div>
+        </div>
+        <div class="chart-body">
+          <div class="bars">
+            <div class="bar" *ngFor="let bucket of analyticsBuckets">
+              <div
+                class="bar-fill"
+                [style.height.%]="getBarHeight(bucket.count)"
+              >
+                <span class="bar-count">{{ bucket.count }}</span>
+              </div>
+              <div class="bar-label">{{ bucket.label }}</div>
+            </div>
+          </div>
+          <div class="x-axis">
+            <div class="x-label">Percentage Range</div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+
+  <ng-template #emptyAnalytics>
+    <div class="chart-empty">No assessments recorded yet.</div>
+  </ng-template>
+</section>

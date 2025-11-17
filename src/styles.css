@@ -1,1 +1,19 @@
 /* You can add global styles to this file, and also import other style files */
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .marks-card-print,
+  .marks-card-print * {
+    visibility: visible;
+  }
+
+  .marks-card-print {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+}

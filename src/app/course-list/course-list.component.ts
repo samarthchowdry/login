@@ -1,8 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { CourseService, Course } from '../services/course.service';
+import { AuthRoleService, UserRole } from '../services/auth-role.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-course-list',
@@ -11,11 +13,13 @@ import { CourseService, Course } from '../services/course.service';
   templateUrl: './course-list.component.html',
   styleUrls: ['./course-list.component.css']
 })
-export class CourseListComponent implements OnInit {
+export class CourseListComponent implements OnInit, OnDestroy {
   courses: Course[] = [];
   filteredCourses: Course[] = [];
   isLoading = false;
   errorMessage = '';
+  userRole: UserRole = 'STUDENT';
+  private roleSub?: Subscription;
 
   filters = {
     name: '',
@@ -27,11 +31,19 @@ export class CourseListComponent implements OnInit {
 
   constructor(
     private courseService: CourseService,
-    private router: Router
+    private router: Router,
+    private authRoleService: AuthRoleService
   ) {}
 
   ngOnInit(): void {
+    this.roleSub = this.authRoleService.role$.subscribe((role) => {
+      this.userRole = role;
+    });
     this.loadCourses();
+  }
+
+  ngOnDestroy(): void {
+    this.roleSub?.unsubscribe();
   }
 
   loadCourses(): void {
@@ -85,7 +97,15 @@ export class CourseListComponent implements OnInit {
     if (page >= 1 && page <= this.totalPages) this.currentPage = page;
   }
 
+  get canModifyCourses(): boolean {
+    return this.userRole === 'ADMIN';
+  }
+
   deleteCourse(id: number): void {
+    if (!this.canModifyCourses) {
+      alert('You do not have permission to delete courses.');
+      return;
+    }
     if (confirm('Are you sure you want to delete this course?')) {
       this.courseService.deleteCourse(id).subscribe({
         next: () => {
@@ -101,6 +121,10 @@ export class CourseListComponent implements OnInit {
   }
 
   onUpdate(id: number): void {
+    if (!this.canModifyCourses) {
+      alert('You do not have permission to update courses.');
+      return;
+    }
     this.router.navigate(['/course-update', id]);
   }
 }

@@ -1,0 +1,199 @@
+<div class="performance-container">
+  <header class="page-header">
+    <div>
+      <h2>Student Performance Insights</h2>
+      <p class="subtitle">Visualise assessment outcomes for every student across the institution.</p>
+    </div>
+    <button type="button" class="refresh-btn" (click)="refresh()" [disabled]="isLoading">
+      <span *ngIf="!isLoading">Refresh</span>
+      <span *ngIf="isLoading">Refreshing...</span>
+    </button>
+  </header>
+
+  <section class="toolbar">
+    <div class="toolbar-group">
+      <label for="branchFilter">Branch</label>
+      <select id="branchFilter" [(ngModel)]="selectedBranch" (ngModelChange)="onBranchChange($event)">
+        <option *ngFor="let branch of availableBranches" [value]="branch">
+          {{ branch === 'ALL' ? 'All branches' : branch }}
+        </option>
+      </select>
+    </div>
+
+    <div class="toolbar-group">
+      <label>Metric</label>
+      <div class="segmented">
+        <button type="button" [class.active]="viewMode === 'percentage'" (click)="setViewMode('percentage')">
+          % Completion
+        </button>
+        <button type="button" [class.active]="viewMode === 'average'" (click)="setViewMode('average')">
+          Average Score
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section class="loading-state" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Crunching the latest performance numbers...</p>
+  </section>
+
+  <section class="error-state" *ngIf="!isLoading && errorMessage">
+    <p>{{ errorMessage }}</p>
+    <button type="button" (click)="refresh()">Retry</button>
+  </section>
+
+  <ng-container *ngIf="!isLoading && !errorMessage">
+    <section class="summary-grid" *ngIf="filtered.length > 0">
+      <article class="summary-card">
+        <p class="summary-label">Students (filtered)</p>
+        <p class="summary-value">{{ filtered.length }}</p>
+      </article>
+      <article class="summary-card">
+        <p class="summary-label">Assessments Recorded</p>
+        <p class="summary-value">{{ totalAssessments }}</p>
+      </article>
+      <article class="summary-card">
+        <p class="summary-label">Average Percentage</p>
+        <p class="summary-value">
+          {{ overallAveragePercentage !== null ? (overallAveragePercentage | number : '1.1-1') + '%' : '—' }}
+        </p>
+      </article>
+      <article class="summary-card" *ngIf="topPerformer as leader">
+        <p class="summary-label">Top Performer</p>
+        <div class="leader-info">
+          <span class="leader-name">{{ leader.studentName }}</span>
+          <span class="leader-metric">
+            {{ viewMode === 'percentage'
+              ? formatPercentage(leader.percentage)
+              : formatScore(leader.averageScore) }}
+          </span>
+        </div>
+      </article>
+    </section>
+
+    <section class="chart-card" *ngIf="filtered.length > 0">
+      <header class="chart-header">
+        <h3>Performance by Student</h3>
+        <span class="chart-metric">{{ metricLabel() }}</span>
+      </header>
+
+      <div class="chart-axes">
+        <div class="axis axis-y">{{ yAxisLabel }}</div>
+        <div class="chart-main">
+          <div class="chart-body">
+            <div class="chart-row" *ngFor="let student of filtered; let idx = index">
+              <div class="chart-rank">#{{ idx + 1 }}</div>
+              <div class="chart-label">
+                <span class="name">{{ student.studentName }}</span>
+                <span class="meta">
+                  {{ student.branch || '—' }} • Last assessed: {{ formatDate(student.lastAssessedOn) }}
+                </span>
+              </div>
+              <div class="chart-bar">
+                <div
+                  class="bar-fill"
+                  [style.width.%]="maxMetric ? (metricValue(student) / maxMetric) * 100 : 0"
+                  [class.zero]="metricValue(student) === 0">
+                </div>
+              </div>
+              <div class="chart-value">
+                {{ viewMode === 'percentage'
+                  ? formatPercentage(student.percentage)
+                  : formatScore(student.averageScore) }}
+              </div>
+            </div>
+          </div>
+          <div class="axis axis-x">{{ xAxisLabel }}</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="detail-panel" *ngIf="filtered.length > 0">
+      <aside class="detail-sidebar">
+        <h4>Student Focus</h4>
+        <p>Select a student to review subject-wise marks.</p>
+        <ul class="student-list">
+          <li
+            *ngFor="let student of filtered"
+            [class.active]="student.studentId === selectedStudentId"
+            (click)="selectStudent(student)">
+            <span class="student-name">{{ student.studentName }}</span>
+            <span class="student-branch">{{ student.branch || '—' }}</span>
+          </li>
+        </ul>
+      </aside>
+
+      <div class="detail-content">
+        <header class="detail-header">
+          <h4>Subject Breakdown</h4>
+          <span class="detail-subtitle" *ngIf="selectedStudentName">
+            {{ selectedStudentName }}
+          </span>
+        </header>
+
+        <div class="marks-loading" *ngIf="marksLoading">
+          <div class="spinner small"></div>
+          <p>Loading subject performance...</p>
+        </div>
+
+        <div class="marks-error" *ngIf="!marksLoading && marksError">
+          {{ marksError }}
+        </div>
+
+        <div class="marks-empty" *ngIf="!marksLoading && !marksError && !hasSubjectSummaries">
+          <p>No marks recorded for this student yet.</p>
+        </div>
+
+        <section class="marks-chart" *ngIf="!marksLoading && !marksError && hasSubjectSummaries">
+          <div class="marks-chart-header">
+            <div class="legend">
+              <span class="legend-item obtained">Obtained</span>
+              <span class="legend-item max">Maximum</span>
+            </div>
+            <span class="chart-helper">Showing cumulative score vs max across all assessments</span>
+          </div>
+
+          <div class="marks-chart-grid">
+            <div class="axis axis-y">Marks</div>
+            <div class="chart-columns">
+              <div class="chart-column" *ngFor="let subject of subjectSummaries">
+                <div class="bars">
+                  <div
+                    class="bar obtained"
+                    [style.height.%]="subjectChartHeight(subject.totalScore)">
+                    <span class="bar-value">{{ subject.totalScore | number:'1.0-1' }}</span>
+                  </div>
+                  <div
+                    class="bar maximum"
+                    [style.height.%]="subjectChartHeight(subject.totalMaxScore)">
+                    <span class="bar-value">{{ subject.totalMaxScore | number:'1.0-1' }}</span>
+                  </div>
+                </div>
+                <div class="column-label">
+                  <span class="label-primary">{{ subject.subject }}</span>
+                  <span class="label-meta">Assessments: {{ subject.assessments }}</span>
+                  <span class="label-meta">
+                    Avg %:
+                    <ng-container *ngIf="subject.percentage !== undefined; else noAvg">
+                      {{ subject.percentage | number:'1.0-1' }}%
+                    </ng-container>
+                    <ng-template #noAvg>—</ng-template>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="axis axis-x">Subjects</div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section class="empty-state" *ngIf="filtered.length === 0">
+      <h3>{{ emptyStateMessage }}</h3>
+      <p *ngIf="performance.length === 0">Once assessments are recorded, you’ll see the comparative insights right here.</p>
+    </section>
+  </ng-container>
+</div>
+
+

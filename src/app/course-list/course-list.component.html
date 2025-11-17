@@ -15,7 +15,7 @@
 
     <!-- Header Actions -->
     <div class="header-actions">
-      <a routerLink="/course-add" class="btn btn-primary">Add New Course</a>
+      <a *ngIf="canModifyCourses" routerLink="/course-add" class="btn btn-primary">Add New Course</a>
       <button (click)="loadCourses()" class="btn btn-secondary">Refresh</button>
     </div>
   </div>
@@ -47,7 +47,7 @@
           <th>Code</th>
           <th>Description</th>
           <th>Credits</th>
-          <th>Actions</th>
+          <th *ngIf="canModifyCourses">Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -57,14 +57,14 @@
           <td>{{ course.code }}</td>
           <td>{{ course.description || 'N/A' }}</td>
           <td>{{ course.credits || 'N/A' }}</td>
-          <td class="actions">
-            <button 
-              (click)="onUpdate(course.id!)" 
+          <td class="actions" *ngIf="canModifyCourses">
+            <button
+              (click)="onUpdate(course.id!)"
               class="btn btn-primary">
               Update
             </button>
-            <button 
-              (click)="deleteCourse(course.id!)" 
+            <button
+              (click)="deleteCourse(course.id!)"
               class="btn btn-delete">
               Delete
             </button>
@@ -97,7 +97,7 @@
       <div class="empty-icon"></div>
       <h3>No Courses Found</h3>
       <p>Add a course to get started</p>
-      <a routerLink="/course-add" class="btn btn-primary">Add New Course</a>
+      <a *ngIf="canModifyCourses" routerLink="/course-add" class="btn btn-primary">Add New Course</a>
     </div>
   </div>
 </div>

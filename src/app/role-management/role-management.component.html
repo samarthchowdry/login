@@ -1,0 +1,29 @@
+<section class="role-management" *ngIf="isAdmin">
+  <h4>Role Management</h4>
+  <form (ngSubmit)="assignRole()" class="role-form">
+    <label>
+      User Email
+      <input
+        type="email"
+        name="roleEmail"
+        required
+        [(ngModel)]="roleUpdateEmail"
+        placeholder="someone@example.com"
+      />
+    </label>
+    <label>
+      Role
+      <select name="roleSelect" [(ngModel)]="roleUpdateRole">
+        <option *ngFor="let role of availableRoles" [value]="role">
+          {{ role | titlecase }}
+        </option>
+      </select>
+    </label>
+    <button type="submit" [disabled]="isUpdatingRole">
+      {{ isUpdatingRole ? 'Updating...' : 'Update Role' }}
+    </button>
+  </form>
+  <div class="role-message success" *ngIf="roleUpdateMessage">{{ roleUpdateMessage }}</div>
+  <div class="role-message error" *ngIf="roleUpdateError">{{ roleUpdateError }}</div>
+</section>
+

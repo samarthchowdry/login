@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CourseService, Course } from '../services/course.service';
+import { AuthRoleService } from '../services/auth-role.service';
 
 @Component({
   selector: 'app-course-update',
@@ -16,6 +17,7 @@ export class CourseUpdateComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private courseService = inject(CourseService);
   router = inject(Router);
+  private authRoleService = inject(AuthRoleService);
 
   courseId!: number;
   course: Course = { id: 0, name: '', code: '', description: '', credits: 0 };
@@ -23,6 +25,11 @@ export class CourseUpdateComponent implements OnInit {
   errorMessage = '';
 
   ngOnInit(): void {
+    if (this.authRoleService.getRole() !== 'ADMIN') {
+      alert('You do not have permission to update courses.');
+      this.router.navigate(['/course-list']);
+      return;
+    }
     this.courseId = Number(this.route.snapshot.paramMap.get('id'));
     this.loadCourse();
   }

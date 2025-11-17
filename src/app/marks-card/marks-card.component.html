@@ -1,0 +1,189 @@
+<div class="marks-card-container marks-card-print" *ngIf="!isLoading && marksCard; else loadingOrError">
+  <header class="marks-header">
+    <div>
+      <h2>Student Marks Card</h2>
+      <p class="subtext">Generated on {{ marksCard.generatedOn | date: 'mediumDate' }}</p>
+    </div>
+    <button type="button" class="print-btn" (click)="printCard()">Print / Save</button>
+  </header>
+
+  <section class="student-info">
+    <div>
+      <label>Name</label>
+      <span>{{ marksCard.studentName }}</span>
+    </div>
+    <div>
+      <label>Branch</label>
+      <span>{{ marksCard.branch || '—' }}</span>
+    </div>
+    <div>
+      <label>Email</label>
+      <span>{{ marksCard.email || '—' }}</span>
+    </div>
+    <div>
+      <label>Date of Birth</label>
+      <span>{{ marksCard.dateOfBirth | date: 'mediumDate' }}</span>
+    </div>
+  </section>
+
+  <section class="course-info" *ngIf="marksCard.courses?.length">
+    <label>Courses</label>
+    <span>{{ marksCard.courses.join(', ') }}</span>
+  </section>
+
+  <section class="summary">
+    <div class="summary-item">
+      <label>Total Subjects</label>
+      <span>{{ totalSubjects }}</span>
+    </div>
+    <div class="summary-item">
+      <label>Total Score</label>
+      <span>{{ marksCard.totalScore ?? '—' }}</span>
+    </div>
+    <div class="summary-item">
+      <label>Total Max Score</label>
+      <span>{{ marksCard.totalMaxScore ?? '—' }}</span>
+    </div>
+    <div class="summary-item">
+      <label>Percentage</label>
+      <span>{{ formattedPercentage }}</span>
+    </div>
+    <div class="summary-item">
+      <label>Overall Grade</label>
+      <span>{{ marksCard.overallGrade || '—' }}</span>
+    </div>
+  </section>
+
+  <section class="marks-table" *ngIf="marksCard.marks?.length; else noMarks">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Subject</th>
+          <th>Assessment</th>
+          <th>Score</th>
+          <th>Grade</th>
+          <th>Assessed On</th>
+          <th>Recorded By</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let mark of marksCard.marks; let idx = index">
+          <td>{{ idx + 1 }}</td>
+          <td>{{ mark.subject }}</td>
+          <td>{{ mark.assessmentName || '—' }}</td>
+          <td>
+            {{ mark.score }}
+            <span *ngIf="mark.maxScore">/ {{ mark.maxScore }}</span>
+          </td>
+          <td>{{ mark.grade || '—' }}</td>
+          <td>{{ mark.assessedOn | date: 'mediumDate' }}</td>
+          <td>{{ mark.recordedBy || '—' }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="performance-chart" *ngIf="performanceData.length">
+    <div class="chart-card" [style.--bar-count]="performanceData.length">
+      <div class="chart-header">
+        <div class="chart-heading">
+          <h3>Performance Overview</h3>
+          <p>Subject-wise percentage of scored marks</p>
+        </div>
+        <div class="chart-meta">
+          <span class="meta-note">Scale: 1 division = {{ percentStep }}%</span>
+          <span class="meta-note">{{ performanceData.length }} subjects</span>
+        </div>
+      </div>
+
+      <div class="bar-chart">
+        <div class="y-axis">
+          <span class="y-label">Percentage</span>
+          <div
+            class="y-axis-ticks"
+            [ngStyle]="{
+              '--tick-count':
+                percentAxisTicks.length > 1 ? percentAxisTicks.length - 1 : 1
+            }"
+          >
+            <span
+              class="tick"
+              *ngFor="let tick of percentAxisTicks; let idx = index"
+              [ngStyle]="{ '--tick-index': idx }"
+            >
+              <span class="tick-value">{{ tick }}%</span>
+            </span>
+          </div>
+        </div>
+
+        <div
+          class="chart-body"
+          [class.chart-body--compact]="performanceData.length > 6"
+        >
+          <div class="axis axis-y">
+            <span class="axis-letter">Y</span>
+          </div>
+          <div class="axis axis-x">
+            <span class="axis-letter">X</span>
+          </div>
+          <span class="origin-label">0</span>
+          <div
+            class="grid-lines"
+            [ngStyle]="{ '--grid-count': percentAxisTicks.length - 1 }"
+          >
+            <div
+              class="grid-line"
+              *ngFor="let tick of percentAxisTicks; let idx = index"
+              [class.grid-line--zero]="tick === 0"
+              [ngStyle]="{ '--grid-index': idx }"
+            ></div>
+          </div>
+
+          <div class="bars-wrapper" [style.--bar-count]="performanceData.length">
+            <div class="bars">
+              <div
+                class="bar"
+                *ngFor="let item of performanceData"
+                [title]="item.label + ': ' + item.percent.toFixed(1) + '%'"
+                [class.bar--short]="getBarHeight(item.percent) < 22"
+                [class.bar--highlight]="isHighlightSubject(item.label)"
+                [ngClass]="getVariantClass(item.label)"
+              >
+                <div class="bar-fill" [style.height.%]="getBarHeight(item.percent)">
+                  <span class="bar-percent">{{ item.percent.toFixed(1) }}%</span>
+                </div>
+              </div>
+            </div>
+            <div class="x-axis-labels">
+              <div
+                class="x-label"
+                *ngFor="let item of performanceData"
+                [ngClass]="[getVariantClass(item.label), isHighlightSubject(item.label) ? 'x-label--highlight' : '']"
+              >
+                {{ item.label }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<ng-template #loadingOrError>
+  <div class="card-message" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Generating marks card...</p>
+  </div>
+  <div class="card-message error" *ngIf="!isLoading && errorMessage">
+    <p>{{ errorMessage }}</p>
+  </div>
+</ng-template>
+
+<ng-template #noMarks>
+  <div class="card-message">
+    <p>No marks recorded yet for this student.</p>
+  </div>
+</ng-template>
+

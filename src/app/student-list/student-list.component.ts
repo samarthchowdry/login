@@ -1,8 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { StudentService, Student } from '../services/student.service';
+import { AuthRoleService, UserRole } from '../services/auth-role.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-student-list',
@@ -11,11 +13,15 @@ import { StudentService, Student } from '../services/student.service';
   templateUrl: './student-list.component.html',
   styleUrls: ['./student-list.component.css']
 })
-export class StudentListComponent implements OnInit {
+export class StudentListComponent implements OnInit, OnDestroy {
   students: Student[] = [];
   filteredStudents: Student[] = [];
   isLoading = false;
   errorMessage = '';
+  bulkMessage = '';
+  bulkUploading = false;
+  userRole: UserRole = 'STUDENT';
+  private roleSub?: Subscription;
 
   filters = {
     name: '',
@@ -25,12 +31,51 @@ export class StudentListComponent implements OnInit {
   };
 
   currentPage = 1;
-  itemsPerPage = 10;
+  itemsPerPage = 5;
+  readonly itemsPerPageOptions = [5, 10, 20, 50];
+  private readonly visiblePageCount = 7;
 
-  constructor(private studentService: StudentService) {}
+  constructor(
+    private studentService: StudentService,
+    private authRoleService: AuthRoleService
+  ) {}
 
   ngOnInit(): void {
+    this.roleSub = this.authRoleService.role$.subscribe((role) => {
+      this.userRole = role;
+    });
     this.loadStudents();
+  }
+
+  ngOnDestroy(): void {
+    this.roleSub?.unsubscribe();
+  }
+
+  // Bulk upload
+  onFileSelected(event: Event): void {
+    if (!this.canManageStudents) {
+      alert('You do not have permission to upload students.');
+      return;
+    }
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+    const file = input.files[0];
+    this.bulkUploading = true;
+    this.bulkMessage = '';
+    this.studentService.bulkUpload(file).subscribe({
+      next: (msg) => {
+        this.bulkMessage = msg;
+        this.bulkUploading = false;
+        this.loadStudents();
+        if (input) input.value = '';
+      },
+      error: (err) => {
+        console.error('Bulk upload failed:', err);
+        this.bulkMessage = 'Bulk upload failed. Please check file format and try again.';
+        this.bulkUploading = false;
+        if (input) input.value = '';
+      }
+    });
   }
 
   /**  Load Students from Backend */
@@ -72,7 +117,21 @@ export class StudentListComponent implements OnInit {
 
   //Pagination Logic 
   get totalPages(): number {
-    return Math.ceil(this.filteredStudents.length / this.itemsPerPage);
+    const total = Math.ceil(this.filteredStudents.length / this.itemsPerPage);
+    return total > 0 ? total : 1;
+  }
+
+  get pageButtons(): number[] {
+    const total = this.totalPages;
+    const blockIndex = Math.floor((this.currentPage - 1) / this.visiblePageCount);
+    const start = blockIndex * this.visiblePageCount + 1;
+    const end = Math.min(start + this.visiblePageCount - 1, total);
+
+    const pages: number[] = [];
+    for (let page = start; page <= end; page++) {
+      pages.push(page);
+    }
+    return pages;
   }
 
   get paginatedStudents(): Student[] {
@@ -93,8 +152,20 @@ export class StudentListComponent implements OnInit {
     if (page >= 1 && page <= this.totalPages) this.currentPage = page;
   }
 
+  onItemsPerPageChange(value: string): void {
+    const parsed = Number(value);
+    if (!Number.isNaN(parsed) && parsed > 0) {
+      this.itemsPerPage = parsed;
+      this.currentPage = 1;
+    }
+  }
+
   // Delete Student
   deleteStudent(id: number): void {
+    if (this.userRole !== 'ADMIN') {
+      alert('You do not have permission to delete students.');
+      return;
+    }
     if (!confirm('Are you sure you want to delete this student?')) return;
 
     this.studentService.deleteStudent(id).subscribe({
@@ -117,6 +188,18 @@ export class StudentListComponent implements OnInit {
         alert('Error deleting student. Please try again.');
       }
     });
+  }
+
+  get canManageStudents(): boolean {
+    return this.userRole === 'ADMIN' || this.userRole === 'TEACHER';
+  }
+
+  get canDeleteStudents(): boolean {
+    return this.userRole === 'ADMIN';
+  }
+
+  get canViewMarksCard(): boolean {
+    return true;
   }
 
   // Utility: Format Date 

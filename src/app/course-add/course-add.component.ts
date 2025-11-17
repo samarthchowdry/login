@@ -1,8 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CourseService, Course } from '../services/course.service';
+import { AuthRoleService } from '../services/auth-role.service';
 
 @Component({
   selector: 'app-course-add',
@@ -11,7 +12,7 @@ import { CourseService, Course } from '../services/course.service';
   templateUrl: './course-add.component.html',
   styleUrls: ['./course-add.component.css']
 })
-export class CourseAddComponent {
+export class CourseAddComponent implements OnInit {
   course: Course = {
     name: '',
     code: '',
@@ -24,8 +25,16 @@ export class CourseAddComponent {
 
   constructor(
     private courseService: CourseService,
-    private router: Router
+    private router: Router,
+    private authRoleService: AuthRoleService
   ) {}
+
+  ngOnInit(): void {
+    if (this.authRoleService.getRole() !== 'ADMIN') {
+      alert('You do not have permission to add courses.');
+      this.router.navigate(['/course-list']);
+    }
+  }
 
   onSubmit(): void {
     if (!this.validateForm()) {

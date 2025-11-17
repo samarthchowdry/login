@@ -1,7 +1,7 @@
 
 <h2>Student Management</h2>
 <div class="student-list-container">
-  <div class="header">
+    <div class="header">
     <!--Search Filters -->
     <div class="search-area">
       <input type="text" placeholder="Search by name"   [(ngModel)]="filters.name">
@@ -14,15 +14,31 @@
      <button (click)="onSearch()" class="btn btn-primary">Search</button> <button (click)="onReset()" class="btn btn-secondary">Reset</button>
     
     <div class="header-actions">
-      <a routerLink="/items" class="btn btn-primary">Add New Student</a>
+      <a *ngIf="canManageStudents" routerLink="/items" class="btn btn-primary">Add New Student</a>
       <button (click)="loadStudents()" class="btn btn-secondary">Refresh</button>
+      <a *ngIf="canManageStudents" routerLink="/student-performance" class="btn btn-analytics">
+        Performance Graph
+      </a>
+      <div class="items-per-page">
+        <label for="itemsPerPage">Rows per page</label>
+        <select id="itemsPerPage" [ngModel]="itemsPerPage" (ngModelChange)="onItemsPerPageChange($event)">
+          <option *ngFor="let option of itemsPerPageOptions" [value]="option">
+            {{ option }}
+          </option>
+        </select>
+      </div>
+    </div>
+
+    <div class="bulk-upload" *ngIf="canManageStudents">
+      <label class="btn btn-secondary">
+        Upload CSV
+        <input type="file" accept=".csv" (change)="onFileSelected($event)" style="display:none">
+      </label>
+      <span *ngIf="bulkUploading">Uploading...</span>
+      <div class="bulk-message" *ngIf="bulkMessage">{{ bulkMessage }}</div>
     </div>
   </div>
-    
-    </div>
-
-   
-
+        </div>
   <!-- Loading State -->
   <div class="loading" *ngIf="isLoading">
     <div class="spinner"></div>
@@ -52,7 +68,7 @@
             <th>Courses</th>
             <th>Date of Birth</th>
             <th>Age</th>
-            <th>Actions</th>
+            <th *ngIf="canManageStudents || canViewMarksCard">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -72,24 +88,33 @@
             </td>
             <td>{{ formatDate(student.dob) }}</td>
             <td>{{ calculateAge(student.dob) }}</td>
-            <td class="actions">
-              <a [routerLink]="['/edit-student', student.id]" class="btn btn-edit">Edit</a>
-              <a [routerLink]="['/student-enroll', student.id]" class="btn btn-enroll">Enroll</a>
-              <button (click)="deleteStudent(student.id!)" class="btn btn-delete">Delete</button>
+            <td class="actions" *ngIf="canManageStudents || canViewMarksCard">
+              <ng-container *ngIf="canManageStudents">
+                <a [routerLink]="['/edit-student', student.id]" class="btn btn-edit">Edit</a>
+                <a [routerLink]="['/student-enroll', student.id]" class="btn btn-enroll">Enroll</a>
+                <a [routerLink]="['/edit-student', student.id]" class="btn btn-grade">Enter Grades</a>
+                <button
+                  *ngIf="canDeleteStudents"
+                  (click)="deleteStudent(student.id!)"
+                  class="btn btn-delete">
+                  Delete
+                </button>
+              </ng-container>
+              <a [routerLink]="['/marks-card', student.id]" class="btn btn-card">Marks Card</a>
             </td>
           </tr>
         </tbody>
       </table>
 
        <!-- Pagination Controls -->
-      <div class="pagination">
+      <div class="pagination" *ngIf="filteredStudents.length > 0">
         <button (click)="prevPage()" [disabled]="currentPage === 1">Prev</button>
 
         <button
-          *ngFor="let page of [].constructor(totalPages); let i = index"
-          (click)="goToPage(i + 1)"
-          [class.active]="currentPage === (i + 1)">
-          {{ i + 1 }}
+          *ngFor="let page of pageButtons"
+          (click)="goToPage(page)"
+          [class.active]="currentPage === page">
+          {{ page }}
         </button>
 
         <button (click)="nextPage()" [disabled]="currentPage === totalPages">Next</button>
@@ -103,7 +128,7 @@
     <div class="empty-state" *ngIf="filteredStudents.length === 0">
       <div class="empty-icon"></div>
       <h3>No Such Students Found</h3>
-      <a routerLink="/items" class="btn btn-primary">Add The Student to List</a>
+      <a *ngIf="canManageStudents" routerLink="/items" class="btn btn-primary">Add The Student to List</a>
     </div>
   </div>
 </div>

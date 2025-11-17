@@ -30,11 +30,11 @@
     </div>
 
     <div class="courses-grid" *ngIf="allCourses.length > 0">
-      <div 
-        class="course-card" 
+      <div
+        class="course-card"
         *ngFor="let course of allCourses"
         [class.enrolled]="isEnrolled(course.id!)"
-        (click)="toggleEnrollment(course.id!)">
+        (click)="onCourseCardClick(course.id!)">
         <div class="course-header">
           <h4>{{ course.name }}</h4>
           <span class="enrollment-badge" *ngIf="isEnrolled(course.id!)">Enrolled</span>
@@ -48,10 +48,10 @@
           </p>
         </div>
         <div class="course-action">
-          <button 
+          <button
             class="btn-enroll"
             [class.btn-unenroll]="isEnrolled(course.id!)"
-            (click)="toggleEnrollment(course.id!); $event.stopPropagation()">
+            (click)="onEnrollButtonClick(course.id!, $event)">
             {{ isEnrolled(course.id!) ? '✓ Enrolled' : '+ Enroll' }}
           </button>
         </div>
