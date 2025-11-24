@@ -21,6 +21,7 @@ export class AppComponent implements AfterViewInit {
   userName = '';
   userEmail = '';
   userRole: UserRole = 'STUDENT';
+  sidebarOpen = false;
   signupMode = false;
   signupMessage = '';
   signupError = '';
@@ -202,8 +203,18 @@ export class AppComponent implements AfterViewInit {
     }, 20);
 
     void this.router.navigate(['/'], { replaceUrl: true });
+    this.sidebarOpen = true;
   }
 
+  toggleSidebar(): void {
+    this.sidebarOpen = !this.sidebarOpen;
+  }
+
+
+  openSidebar(): void {
+    this.sidebarOpen = true;
+  }
+  
 
   onGoogleFallbackClick(forSignup = false): void {
     if (forSignup) {
@@ -394,5 +405,6 @@ export class AppComponent implements AfterViewInit {
   private navigateToRole(role: UserRole): Promise<boolean> {
     const target = role === 'ADMIN' ? ['/overview'] : ['/home'];
     return this.router.navigate(target, { replaceUrl: true });
+    
   }
 }

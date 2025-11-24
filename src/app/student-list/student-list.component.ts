@@ -24,6 +24,7 @@ export class StudentListComponent implements OnInit, OnDestroy {
   private roleSub?: Subscription;
 
   filters = {
+    id: '',
     name: '',
     dob: '',
     email: '',
@@ -80,6 +81,12 @@ export class StudentListComponent implements OnInit, OnDestroy {
 
   /**  Load Students from Backend */
   loadStudents(): void {
+    const idFilter = this.filters.id?.toString().trim();
+    if (idFilter) {
+      this.searchStudentById(idFilter);
+      return;
+    }
+
     this.isLoading = true;
     this.errorMessage = '';
 
@@ -101,12 +108,18 @@ export class StudentListComponent implements OnInit, OnDestroy {
 
   //Search Button Click 
   onSearch(): void {
+    const idFilter = this.filters.id?.toString().trim();
+    if (idFilter) {
+      this.searchStudentById(idFilter);
+      return;
+    }
     this.loadStudents();
   }
 
   //Reset Filters 
   onReset(): void {
     this.filters = {
+      id: '',
       name: '',
       dob: '',
       email: '',
@@ -219,5 +232,41 @@ export class StudentListComponent implements OnInit, OnDestroy {
       age--;
     }
     return age;
+  }
+
+  private searchStudentById(idValue: string): void {
+    const parsedId = Number(idValue);
+    if (Number.isNaN(parsedId) || parsedId <= 0) {
+      this.errorMessage = 'Please enter a valid numeric ID.';
+      this.students = [];
+      this.filteredStudents = [];
+      return;
+    }
+
+    this.isLoading = true;
+    this.errorMessage = '';
+
+    this.studentService.getStudentById(parsedId).subscribe({
+      next: (student) => {
+        this.students = student ? [student] : [];
+        this.filteredStudents = [...this.students];
+        this.currentPage = 1;
+        this.isLoading = false;
+        if (!student) {
+          this.errorMessage = `No student found with ID ${parsedId}.`;
+        }
+      },
+      error: (error) => {
+        console.error('Error fetching student by ID:', error);
+        if (error.status === 404) {
+          this.errorMessage = `No student found with ID ${parsedId}.`;
+        } else {
+          this.errorMessage = 'Error searching by ID. Please try again.';
+        }
+        this.students = [];
+        this.filteredStudents = [];
+        this.isLoading = false;
+      }
+    });
   }
 }

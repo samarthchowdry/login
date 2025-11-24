@@ -119,7 +119,7 @@ export class ItemsComponent implements OnInit {
       this.studentService.createStudent(formData).subscribe({
         next: (response) => {
           console.log('Student saved successfully to studentdb1:', response);
-          this.submitMessage = 'Student saved successfully to studentdb1!';
+          this.submitMessage = 'Student saved successfully to studentdb2!';
           this.itemForm.reset();
           this.isSubmitting = false;
         },

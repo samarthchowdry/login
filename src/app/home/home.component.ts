@@ -1,15 +1,17 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { RoleManagementComponent } from '../role-management/role-management.component';
 import { AuthRoleService, UserRole } from '../services/auth-role.service';
 import { Subscription } from 'rxjs';
 import { StudentService, StudentPerformance } from '../services/student.service';
+import { AdminService, EmailNotification, Notification } from '../services/admin.service';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, RouterModule, RoleManagementComponent],
+  imports: [CommonModule, RouterModule, FormsModule, RoleManagementComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css'
 })
@@ -27,10 +29,28 @@ export class HomeComponent implements OnInit, OnDestroy {
   showAnalyticsPanel = false;
   private maxBucketCount = 0;
 
+  // Email and notifications data
+  emailNotifications: EmailNotification[] = [];
+  inAppNotifications: Notification[] = [];
+  emailLoading = false;
+  notificationsLoading = false;
+  clearingEmails = false;
+  clearingNotifications = false;
+  markingNotificationIds = new Set<number>();
+  emailError = '';
+  notificationsError = '';
+  broadcastSubject = '';
+  broadcastMessage = '';
+  broadcastSending = false;
+  broadcastSuccessMessage = '';
+  broadcastErrorMessage = '';
+
   constructor(
     private authRoleService: AuthRoleService,
     private studentService: StudentService,
-    private route: ActivatedRoute
+    private adminService: AdminService,
+    private route: ActivatedRoute,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -42,6 +62,10 @@ export class HomeComponent implements OnInit, OnDestroy {
       const wantsAnalytics = params.get('view') === 'analytics';
       this.updateAnalyticsVisibility(wantsAnalytics);
     });
+  }
+
+  canSendBroadcast(): boolean {
+    return !!this.broadcastSubject.trim() && !!this.broadcastMessage.trim() && !this.broadcastSending;
   }
 
   ngOnDestroy(): void {
@@ -56,6 +80,12 @@ export class HomeComponent implements OnInit, OnDestroy {
     const wantsAnalytics =
       this.route.snapshot.queryParamMap.get('view') === 'analytics';
     this.updateAnalyticsVisibility(wantsAnalytics);
+    
+    // Load admin data if admin
+    if (this.isAdmin) {
+      this.loadEmailStatus();
+      this.loadNotifications();
+    }
   }
 
   private updateAnalyticsVisibility(wantsAnalytics: boolean): void {
@@ -162,5 +192,159 @@ export class HomeComponent implements OnInit, OnDestroy {
       return 0;
     }
     return (count / this.maxBucketCount) * 100;
+  }
+
+  private loadEmailStatus(): void {
+    this.emailLoading = true;
+    this.emailError = '';
+    this.adminService.getEmailStatus().subscribe({
+      next: (emails) => {
+        this.emailNotifications = emails;
+        this.emailLoading = false;
+      },
+      error: () => {
+        this.emailError = 'Failed to load email status.';
+        this.emailLoading = false;
+      }
+    });
+  }
+
+  private loadNotifications(): void {
+    this.notificationsLoading = true;
+    this.notificationsError = '';
+    this.adminService.getInAppNotifications().subscribe({
+      next: (notifications) => {
+        this.inAppNotifications = notifications;
+        this.notificationsLoading = false;
+      },
+      error: () => {
+        this.notificationsError = 'Failed to load notifications.';
+        this.notificationsLoading = false;
+      }
+    });
+  }
+
+  formatDateTime(dateTime: string | null): string {
+    if (!dateTime) return 'N/A';
+    return new Date(dateTime).toLocaleString();
+  }
+
+  getStatusClass(status: string): string {
+    switch (status) {
+      case 'SENT':
+        return 'status-sent';
+      case 'FAILED':
+        return 'status-failed';
+      case 'PENDING':
+        return 'status-pending';
+      case 'UNREAD':
+        return 'status-unread';
+      case 'READ':
+        return 'status-read';
+      default:
+        return '';
+    }
+  }
+
+  onClearEmailStatus(): void {
+    if (this.clearingEmails) {
+      return;
+    }
+    this.clearingEmails = true;
+    this.emailError = '';
+    this.adminService.clearEmailStatus().subscribe({
+      next: () => {
+        this.emailNotifications = [];
+        this.clearingEmails = false;
+      },
+      error: () => {
+        this.emailError = 'Unable to clear email status.';
+        this.clearingEmails = false;
+      }
+    });
+  }
+
+  onClearNotifications(): void {
+    if (this.clearingNotifications) {
+      return;
+    }
+    this.clearingNotifications = true;
+    this.notificationsError = '';
+    this.adminService.clearInAppNotifications().subscribe({
+      next: () => {
+        this.inAppNotifications = [];
+        this.clearingNotifications = false;
+      },
+      error: () => {
+        this.notificationsError = 'Unable to clear notifications.';
+        this.clearingNotifications = false;
+      }
+    });
+  }
+
+  isMarkingNotification(id: number): boolean {
+    return this.markingNotificationIds.has(id);
+  }
+
+  onMarkNotificationAsRead(notification: Notification): void {
+    if (notification.status === 'READ' || this.isMarkingNotification(notification.id)) {
+      return;
+    }
+    this.markingNotificationIds.add(notification.id);
+    this.adminService.markNotificationAsRead(notification.id).subscribe({
+      next: (updated) => {
+        this.markingNotificationIds.delete(notification.id);
+        this.inAppNotifications = this.inAppNotifications.map((item) =>
+          item.id === updated.id ? { ...item, status: updated.status } : item
+        );
+      },
+      error: () => {
+        this.notificationsError = 'Unable to mark notification as read.';
+        this.markingNotificationIds.delete(notification.id);
+      },
+    });
+  }
+
+  onSendBroadcastEmail(): void {
+    if (!this.isAdmin || this.broadcastSending) {
+      return;
+    }
+    const subject = this.broadcastSubject.trim();
+    const message = this.broadcastMessage.trim();
+    if (!subject || !message) {
+      this.broadcastErrorMessage = 'Subject and message are required.';
+      return;
+    }
+    this.broadcastSending = true;
+    this.broadcastErrorMessage = '';
+    this.broadcastSuccessMessage = '';
+    this.adminService
+      .sendBroadcastEmail({ subject, message })
+      .subscribe({
+        next: (response) => {
+          this.broadcastSending = false;
+          this.broadcastSuccessMessage = `Email sent to ${response.recipients} students.`;
+          this.broadcastSubject = '';
+          this.broadcastMessage = '';
+          this.loadEmailStatus();
+        },
+        error: () => {
+          this.broadcastSending = false;
+          this.broadcastErrorMessage = 'Unable to send broadcast email.';
+        },
+      });
+  }
+
+  toggleNotificationsPanel(): void {
+    if (!this.isAdmin) {
+      return;
+    }
+    this.router.navigate(['/notifications']);
+  }
+
+  get unreadNotificationsCount(): number {
+    return this.inAppNotifications.filter(
+      (notification) => notification.status === 'UNREAD'
+    ).length;
   }
 }

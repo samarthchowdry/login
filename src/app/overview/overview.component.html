@@ -33,7 +33,7 @@
   <div class="quick-links">
     <h2>Quick Access</h2>
     <ul class="links-list">
-      <li *ngFor="let feature of features">
+      <li *ngFor="let feature of visibleFeatures">
         <a [routerLink]="feature.link" [queryParams]="feature.queryParams || null">
           {{ feature.cta }}
         </a>

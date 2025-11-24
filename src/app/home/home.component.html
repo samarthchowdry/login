@@ -6,7 +6,21 @@
     </div>
     
     <div class="features-section">
-      <h2>Available Features</h2>
+      <div class="features-header">
+<h2>Available Features</h2>
+        <button
+          *ngIf="isAdmin"
+          type="button"
+          class="bell-btn"
+          (click)="toggleNotificationsPanel()"
+        >
+          <span class="bell-icon">🔔</span>
+          <span class="badge" *ngIf="unreadNotificationsCount > 0">
+            {{ unreadNotificationsCount }}
+          </span>
+        </button>
+      </div>
+
       <div class="feature-cards">
         <div class="feature-card">
           <h3>Students Management</h3>
@@ -42,6 +56,97 @@
         </ng-container>
       </div>
     </div>
+
+    <!-- Admin Dashboard Sections  -->
+    <ng-container *ngIf="isAdmin">
+      <!-- Email Status Table in admin view -->
+      <div class="admin-section">
+        <div class="admin-section-header">
+          <h2>Email Status</h2>
+          <button
+            class="clear-btn"
+            (click)="onClearEmailStatus()"
+            [disabled]="emailLoading || clearingEmails"
+          >
+            {{ clearingEmails ? 'Clearing…' : 'Clear All' }}
+          </button>
+        </div>
+        <div *ngIf="emailLoading" class="loading-message">Loading email status...</div>
+        <div *ngIf="emailError" class="error-message">{{ emailError }}</div>
+        <div *ngIf="!emailLoading && !emailError" class="table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>To Email</th>
+                <th>Subject</th>
+                <th>Status</th>
+                <th>Sent Time</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let email of emailNotifications">
+                <td>{{ email.id }}</td>
+                <td>{{ email.toEmail }}</td>
+                <td>{{ email.subject }}</td>
+                <td>
+                  <span [class]="'status-badge ' + getStatusClass(email.status)">
+                    {{ email.status }}
+                  </span>
+                </td>
+                <td>{{ formatDateTime(email.sentTime) }}</td>
+              </tr>
+              <tr *ngIf="emailNotifications.length === 0">
+                <td colspan="5" class="no-data">No email records found.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Broadcast Email -->
+      <div class="admin-section">
+        <div class="admin-section-header">
+          <h2>Send Broadcast Email</h2>
+        </div>
+        <div class="broadcast-form">
+          <label class="form-label" for="broadcast-subject">Subject</label>
+          <input
+            id="broadcast-subject"
+            type="text"
+            name="broadcastSubject"
+            [(ngModel)]="broadcastSubject"
+            placeholder="Exam timetable update"
+          />
+
+          <label class="form-label" for="broadcast-message">Message</label>
+          <textarea
+            id="broadcast-message"
+            name="broadcastMessage"
+            rows="5"
+            [(ngModel)]="broadcastMessage"
+            placeholder="Dear students, ..."
+          ></textarea>
+
+          <div class="form-actions">
+            <button
+              class="broadcast-btn"
+              (click)="onSendBroadcastEmail()"
+              [disabled]="!canSendBroadcast()"
+            >
+              {{ broadcastSending ? 'Sending…' : 'Send to all students' }}
+            </button>
+          </div>
+
+          <div *ngIf="broadcastSuccessMessage" class="success-message">
+            {{ broadcastSuccessMessage }}
+          </div>
+          <div *ngIf="broadcastErrorMessage" class="error-message">
+            {{ broadcastErrorMessage }}
+          </div>
+        </div>
+      </div>
+    </ng-container>
   </div>
 </ng-container>
 

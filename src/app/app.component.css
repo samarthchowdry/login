@@ -1,7 +1,8 @@
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
-  background-color: #f2f2f2;
+  font-family: 'Inter', Arial, sans-serif;
+  background-color: #f7f7f8;
+  color: #0b0f19;
 }
 
 /* Login Container Styles */
@@ -198,59 +199,98 @@ button.link:hover {
   box-sizing: border-box;
 }
 
-/* Main Application Layout */
-.app-container {
-  display: flex;
-  height: 100vh;
-  background-color: #f8f9fa;
-}
-
-/* Sidebar Styles */
-.sidebar {
-  width: 250px;
-  background-color: #343a40;
-  color: white;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-}
-
 .sidebar-header {
-  padding: 20px;
-  border-bottom: 1px solid #495057;
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid #ececf1;
 }
 
-.sidebar-header h3 {
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.sidebar-logo {
+  width: 100px;
+  height: 32px;
+  border-radius: 10px;
+  background: #101923;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+  margin-bottom: 16px;
+}
+
+.sidebar-logo svg {
+  width: 90px;
+  height: 22px;
+}
+
+.sensei-logo text {
+  letter-spacing: 0.32rem;
+}
+
+.sidebar-title-group h3 {
   margin: 0;
-  color: #fff;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
+  color: #101923;
+}
+
+.sidebar-subtitle {
+  display: block;
+  font-size: 0.8rem;
+  color: #6b6f76;
+}
+
+.sidebar-close-btn {
+  margin-left: auto;
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  color: #0b0f19;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 999px;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12);
+}
+
+.sidebar-close-btn:hover {
+  background: #f4f4f5;
 }
 
 .sidebar-user {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid #495057;
+  margin-top: 16px;
+  padding: 16px 20px 0;
+  border-top: 1px solid #ececf1;
 }
 
 .user-name {
   font-weight: 600;
   font-size: 0.95rem;
-  color: #fff;
+  color: #101923;
+  margin: 0;
+  line-height: 1.4;
 }
 
 .user-email {
   margin-top: 4px;
   font-size: 0.8rem;
-  color: #ced4da;
+  color: #6b6f76;
   word-break: break-all;
+  line-height: 1.4;
+  margin-bottom: 0;
 }
 
 .user-role {
   margin-top: 6px;
   font-size: 0.8rem;
-  color: #ffc107;
+  color: #a855f7;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  line-height: 1.4;
+  margin-bottom: 0;
 }
 
 .nav-menu {
@@ -261,62 +301,193 @@ button.link:hover {
 }
 
 .nav-item {
-  border-bottom: 1px solid #495057;
+  border-bottom: none;
 }
 
 .nav-link {
-  display: block;
-  padding: 15px 20px;
-  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  color: #0b0f19;
   text-decoration: none;
-  transition: background-color 0.3s ease;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  font-weight: 500;
 }
 
 .nav-link:hover {
-  background-color: #495057;
+  background-color: #f4f4f4;
+  color: #0b0f19;
 }
 
 .nav-link.router-link-active {
-  background-color: #007bff;
+  background-color: #ececf1;
+  border-left: 3px solid #101923;
+  color: #0b0f19;
+}
+
+.nav-icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+  opacity: 0.7;
+}
+
+.nav-icon svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
+.nav-link.router-link-active .nav-icon {
+  opacity: 1;
+}
+
+.nav-text {
+  flex: 1;
 }
 
 .sidebar-footer {
-  padding: 20px;
-  border-top: 1px solid #495057;
+  margin-top: auto;
+  width: 100%;
+  padding: 16px 20px;
+  border-top: 1px solid #ececf1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .logout-btn {
-  width: 100%;
-  padding: 10px;
-  background-color: #dc3545;
+  width: auto;
+  padding: 6px 16px;
+  background-color: #1f2937;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 11px;
+  font-weight: 600;
 }
 
 .logout-btn:hover {
-  background-color: #c82333;
+  background-color: #0f172a;
 }
 
 /* Main Content Area */
+.app-container {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f7f7f8;
+  overflow: hidden;
+}
+
+.sidebar {
+  width: 260px;
+  background-color: #ffffff;
+  color: #0b0f19;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 0;
+  gap: 0;
+  box-shadow: 2px 0 20px rgba(15, 23, 42, 0.08);
+}
+
+.sidebar .nav-menu {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+}
+
+.sidebar .nav-link {
+  width: 100%;
+  justify-content: flex-start;
+  border-radius: 0;
+  padding: 14px 20px;
+}
+
+.sidebar .nav-icon {
+  opacity: 1;
+}
+
+.sidebar .nav-text {
+  display: inline;
+  font-size: 0.85rem;
+}
+
 .main-content {
   flex: 1;
   padding: 20px;
   overflow-y: auto;
-  background-color: #f8f9fa;
+  background-color: #f7f7f8;
+  transition: margin-left 0.3s ease;
+}
+
+.main-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.main-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.menu-pill-stack {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sidebar-open-btn {
+  width: auto;
+  padding: 0 18px;
+  background-color: #ffffff;
+  color: #0b0f19;
+  border: 1px solid #e4e4e7;
+  border-radius: 16px;
+  cursor: pointer;
+  font-weight: 600;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  position: sticky;
+  top: 0;
+  height: 44px;
+}
+
+.sidebar-open-btn .menu-icon {
+  font-size: 1.1rem;
+  margin-right: 6px;
+}
+
+.sidebar-open-btn:hover {
+  background-color: #f4f4f5;
 }
 
 .role-banner {
   background-color: #fff;
-  border: 1px solid #dee2e6;
+  border: 1px solid #ececf1;
   border-radius: 6px;
-  padding: 12px 16px;
+  padding: 0 18px;
   font-size: 0.95rem;
-  color: #495057;
-  margin-bottom: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  color: #4b5563;
+  margin: 0;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.06);
+  display: inline-flex;
+  align-items: center;
+  height: 44px;
 }
 
 .role-banner strong {
@@ -353,4 +524,71 @@ button.link:hover {
     padding: 15px;
   }
 
+}
+
+.app-container.sidebar-collapsed .sidebar {
+  width: 80px;
+  align-items: center;
+  padding: 12px 0;
+}
+
+.app-container.sidebar-collapsed .sidebar-header {
+  padding: 12px 6px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.app-container.sidebar-collapsed .sidebar-title-group,
+.app-container.sidebar-collapsed .sidebar-subtitle,
+.app-container.sidebar-collapsed .sidebar-close-btn,
+.app-container.sidebar-collapsed .sidebar-user,
+.app-container.sidebar-collapsed .sidebar-footer {
+  display: none;
+}
+
+.app-container.sidebar-collapsed .nav-menu {
+  padding: 20px 0;
+  gap: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.app-container.sidebar-collapsed .nav-item {
+  border-bottom: none;
+  width: 100%;
+}
+
+.app-container.sidebar-collapsed .nav-link {
+  justify-content: center;
+  padding: 10px 0;
+  border-radius: 12px;
+  margin: 2px 12px;
+}
+
+.app-container.sidebar-collapsed .nav-link.router-link-active {
+  border-left: none;
+  background-color: #ececf1;
+}
+
+.app-container.sidebar-collapsed .nav-text {
+  display: none;
+}
+
+.app-container.sidebar-collapsed .sidebar-logo {
+  margin-bottom: 16px;
+  width: 70px;
+  height: 28px;
+  padding: 0 4px;
+}
+
+.app-container.sidebar-collapsed .sidebar-logo svg {
+  width: 62px;
+  height: 18px;
+}
+
+.app-container.sidebar-collapsed .sensei-logo text {
+  font-size: 11px;
+  letter-spacing: 0.2rem;
 }

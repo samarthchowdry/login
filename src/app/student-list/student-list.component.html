@@ -4,6 +4,8 @@
     <div class="header">
     <!--Search Filters -->
     <div class="search-area">
+      <input type="number" placeholder="Search by ID"   [(ngModel)]="filters.id">
+
       <input type="text" placeholder="Search by name"   [(ngModel)]="filters.name">
 
       <input type="email" placeholder="Search by email" [(ngModel)]="filters.email">

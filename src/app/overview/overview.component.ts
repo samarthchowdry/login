@@ -7,7 +7,7 @@ import {
   StudentService,
 } from '../services/student.service';
 import { CourseService } from '../services/course.service';
-import { AuthRoleService } from '../services/auth-role.service';
+import { AuthRoleService, UserRole } from '../services/auth-role.service';
 
 interface OverviewFeature {
   title: string;
@@ -52,6 +52,7 @@ export class OverviewComponent implements OnInit, OnDestroy {
       link: ['/student-performance'],
     },
   ];
+  visibleFeatures: OverviewFeature[] = [...this.features];
 
   stats = {
     students: { label: 'Total Students', value: 0 },
@@ -76,13 +77,16 @@ export class OverviewComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.isAdmin = this.authRoleService.getRole() === 'ADMIN';
+    const currentRole = this.authRoleService.getRole();
+    this.isAdmin = currentRole === 'ADMIN';
+    this.updateFeatureVisibility(currentRole);
     this.loadStats();
     if (this.isAdmin) {
       this.loadShortAnalytics();
     }
     this.roleSub = this.authRoleService.role$.subscribe((role) => {
       const adminNow = role === 'ADMIN';
+      this.updateFeatureVisibility(role);
       if (adminNow && !this.isAdmin && !this.analyticsSummary.length) {
         this.loadShortAnalytics();
       }
@@ -171,6 +175,15 @@ export class OverviewComponent implements OnInit, OnDestroy {
       ...pair,
       percent: Math.round((pair.count / max) * 100),
     }));
+  }
+
+  private updateFeatureVisibility(role: UserRole): void {
+    const canViewAnalytics = role === 'ADMIN' || role === 'TEACHER';
+    this.visibleFeatures = canViewAnalytics
+      ? this.features
+      : this.features.filter(
+          (feature) => feature.link?.[0] !== '/student-performance'
+        );
   }
 }
 

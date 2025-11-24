@@ -64,6 +64,7 @@ export class StudentService {
 
   /** 🔹 Get students with optional filters */
   getStudents(filters: {
+    id?: string | number;
     name?: string;
     dob?: string;
     email?: string;
@@ -72,10 +73,13 @@ export class StudentService {
   }): Observable<Student[]> {
     let params = new HttpParams();
 
-    Object.keys(filters).forEach((key) => {
-      const value = (filters as any)[key];
-      if (value && value.trim() !== '') {
-        params = params.set(key, value);
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        const trimmedValue =
+          typeof value === 'string' ? value.trim() : value.toString().trim();
+        if (trimmedValue !== '') {
+          params = params.set(key, trimmedValue);
+        }
       }
     });
 

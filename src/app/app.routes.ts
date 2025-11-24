@@ -10,6 +10,7 @@ import { MarksCardComponent } from './marks-card/marks-card.component';
 import { CourseUpdateComponent } from './course-update/course-update.component';
 import { StudentPerformanceComponent } from './student-performance/student-performance.component';
 import { OverviewComponent } from './overview/overview.component';
+import { NotificationsComponent } from './notifications/notifications.component';
 
 export const routes: Routes = [
   {
@@ -60,5 +61,9 @@ export const routes: Routes = [
   {
     path: 'student-performance',
     component: StudentPerformanceComponent
+  },
+  {
+    path: 'notifications',
+    component: NotificationsComponent
   }
 ];

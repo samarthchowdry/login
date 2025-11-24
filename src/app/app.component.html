@@ -1,6 +1,4 @@
-<!-- Authentication Shell (shown when not logged in) -->
 <div *ngIf="!isLoggedIn">
-  <!-- Login Form -->
   <div *ngIf="!signupMode; else signupBlock" class="login-container">
     <h2>Sensei Login</h2>
     <form (ngSubmit)="onLogin()">
@@ -54,7 +52,6 @@
     </div>
   </div>
 
-  <!-- Signup Block -->
   <ng-template #signupBlock>
     <div class="signup-container">
       <h2>Create your account</h2>
@@ -96,12 +93,40 @@
   </ng-template>
 </div>
 
-<!-- Main Application (shown when logged in) -->
-<div *ngIf="isLoggedIn" class="app-container">
-  <!-- Navigation Sidebar -->
+<div
+  *ngIf="isLoggedIn"
+  class="app-container"
+  [class.sidebar-collapsed]="!sidebarOpen"
+>
   <nav class="sidebar">
     <div class="sidebar-header">
-      <h3>Dashboard</h3>
+      <div class="sidebar-brand">
+        <span class="sidebar-logo" aria-hidden="true">
+          <svg viewBox="0 0 64 28" role="presentation" class="sensei-logo">
+            <rect
+              x="6"
+              y="6"
+              width="12"
+              height="12"
+              rx="2"
+              stroke="#ff7a18"
+              stroke-width="3"
+              fill="none"
+            />
+            <circle cx="12" cy="4" r="3" fill="#ff7a18" />
+            <text
+              x="20"
+              y="18"
+              fill="#ffffff"
+              font-size="13"
+              font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif"
+              font-weight="600"
+            >
+              SENSEI
+            </text>
+          </svg>
+        </span>
+      </div>
       <div class="sidebar-user" *ngIf="userName || userEmail">
         <div class="user-name">{{ userName || 'Google User' }}</div>
         <div class="user-email" *ngIf="userEmail">{{ userEmail }}</div>
@@ -110,22 +135,69 @@
     </div>
     <ul class="nav-menu">
       <li class="nav-item">
-        <a routerLink="/overview" class="nav-link">Overview</a>
+        <a routerLink="/overview" class="nav-link" (click)="openSidebar()">
+          <span class="nav-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" role="presentation">
+              <path d="M3 5h18v2H3Zm3 6h12v2H6Zm-3 6h18v2H3Z" />
+            </svg>
+          </span>
+          <span class="nav-text">Overview</span>
+        </a>
       </li>
       <li class="nav-item">
-        <a routerLink="/home" class="nav-link">Home</a>
+        <a routerLink="/home" class="nav-link" (click)="openSidebar()">
+          <span class="nav-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" role="presentation">
+              <path d="M12 3.2 2 11h2v9h6v-6h4v6h6v-9h2Z" />
+            </svg>
+          </span>
+          <span class="nav-text">Home</span>
+        </a>
       </li>
       <li class="nav-item">
-        <a routerLink="/student-list" class="nav-link">All Students</a>
+        <a routerLink="/student-list" class="nav-link" (click)="openSidebar()">
+          <span class="nav-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" role="presentation">
+              <path d="M7 11a3 3 0 1 1 3-3 3 3 0 0 1-3 3Zm0 2a5 5 0 0 0-5 5v1h8v-1a5 5 0 0 0-3-5Zm10-2a3 3 0 1 0-3-3 3 3 0 0 0 3 3Zm0 2a5 5 0 0 0-3 5v1h8v-1a5 5 0 0 0-5-5Z" />
+            </svg>
+          </span>
+          <span class="nav-text">All Students</span>
+        </a>
       </li>
       <li class="nav-item" *ngIf="userRole === 'ADMIN' || userRole === 'TEACHER'">
-        <a routerLink="/student-performance" class="nav-link">Performance Graph</a>
+        <a routerLink="/student-performance" class="nav-link" (click)="openSidebar()">
+          <span class="nav-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" role="presentation">
+              <path d="M5 3h2v14H5Zm6 4h2v10h-2Zm6 5h2v5h-2ZM4 19h16v2H4Z" />
+            </svg>
+          </span>
+          <span class="nav-text">Performance Graph</span>
+        </a>
       </li>
       <li class="nav-item" *ngIf="userRole === 'ADMIN' || userRole === 'TEACHER'">
-        <a routerLink="/items" class="nav-link">Add Student</a>
+        <a routerLink="/items" class="nav-link" (click)="openSidebar()">
+          <span class="nav-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" role="presentation">
+              <path d="M11 4h2v6h6v2h-6v6h-2v-6H5v-2h6Z" />
+            </svg>
+          </span>
+          <span class="nav-text">Add Student</span>
+        </a>
       </li>
       <li class="nav-item" *ngIf="userRole === 'ADMIN' || userRole === 'TEACHER'">
-        <a [routerLink]="['/home']" [queryParams]="{ view: 'analytics' }" class="nav-link">Complete Analytics</a>
+        <a
+          [routerLink]="['/home']"
+          [queryParams]="{ view: 'analytics' }"
+          class="nav-link"
+          (click)="openSidebar()"
+        >
+          <span class="nav-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" role="presentation">
+              <path d="M12 4 2 9l10 5 10-5Zm-8 9v4l8 4 8-4v-4l-8 4Z" />
+            </svg>
+          </span>
+          <span class="nav-text">Complete Analytics</span>
+        </a>
       </li>
     </ul>
     <div class="sidebar-footer">
@@ -133,13 +205,26 @@
     </div>
   </nav>
 
-  <!-- Main Content Area -->
   <main class="main-content">
-    <div class="role-banner">
-      Logged in as <strong>{{ userRole | titlecase }}</strong>
+    <div class="main-header">
+      <div class="main-header-left">
+        <div class="menu-pill-stack">
+          <button
+            type="button"
+            class="sidebar-open-btn"
+            (click)="toggleSidebar()"
+            [attr.aria-expanded]="sidebarOpen"
+          >
+            <span class="menu-icon">☰</span>
+            <span>{{ sidebarOpen ? 'Close Menu' : 'Menu' }}</span>
+          </button>
+          <div class="role-banner">
+            Logged in as <strong>{{ userRole | titlecase }}</strong>
+          </div>
+        </div>
+      </div>
     </div>
 
     <router-outlet></router-outlet>
   </main>
 </div>
-
