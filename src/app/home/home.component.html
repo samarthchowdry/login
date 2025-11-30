@@ -146,6 +146,76 @@
           </div>
         </div>
       </div>
+
+      <!-- Individual Student Email -->
+      <div class="admin-section">
+        <div class="admin-section-header">
+          <h2>Send Individual Email</h2>
+          <button
+            class="clear-btn"
+            type="button"
+            (click)="loadStudentOptions(true)"
+            [disabled]="studentOptionsLoading"
+          >
+            {{ studentOptionsLoading ? 'Loading…' : 'Reload students' }}
+          </button>
+        </div>
+        <div *ngIf="studentOptionsError" class="error-message">
+          {{ studentOptionsError }}
+        </div>
+        <div class="individual-email-form">
+          <label class="form-label" for="student-select">Student</label>
+          <select
+            id="student-select"
+            [(ngModel)]="selectedStudentId"
+            name="selectedStudentId"
+          >
+            <option [ngValue]="null" disabled>Select a student</option>
+            <option
+              *ngFor="let student of studentOptions"
+              [value]="student.id"
+            >
+              {{ student.name }} (ID: {{ student.id }})
+            </option>
+          </select>
+
+          <label class="form-label" for="individual-subject">Subject</label>
+          <input
+            id="individual-subject"
+            type="text"
+            name="individualSubject"
+            [(ngModel)]="individualSubject"
+            placeholder="Hello from admin"
+          />
+
+          <label class="form-label" for="individual-message">Message</label>
+          <textarea
+            id="individual-message"
+            name="individualMessage"
+            rows="5"
+            [(ngModel)]="individualMessage"
+            placeholder="Hi John, ..."
+          ></textarea>
+
+          <div class="form-actions">
+            <button
+              class="broadcast-btn"
+              type="button"
+              (click)="onSendIndividualEmail()"
+              [disabled]="!canSendIndividualEmail()"
+            >
+              {{ individualSending ? 'Sending…' : 'Send to student' }}
+            </button>
+          </div>
+
+          <div *ngIf="individualSuccessMessage" class="success-message">
+            {{ individualSuccessMessage }}
+          </div>
+          <div *ngIf="individualErrorMessage" class="error-message">
+            {{ individualErrorMessage }}
+          </div>
+        </div>
+      </div>
     </ng-container>
   </div>
 </ng-container>

@@ -5,8 +5,9 @@ import { FormsModule } from '@angular/forms';
 import { RoleManagementComponent } from '../role-management/role-management.component';
 import { AuthRoleService, UserRole } from '../services/auth-role.service';
 import { Subscription } from 'rxjs';
-import { StudentService, StudentPerformance } from '../services/student.service';
+import { StudentService, StudentPerformance, Student } from '../services/student.service';
 import { AdminService, EmailNotification, Notification } from '../services/admin.service';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-home',
@@ -44,6 +45,15 @@ export class HomeComponent implements OnInit, OnDestroy {
   broadcastSending = false;
   broadcastSuccessMessage = '';
   broadcastErrorMessage = '';
+  studentOptions: Student[] = [];
+  studentOptionsLoading = false;
+  studentOptionsError = '';
+  selectedStudentId: string | null = null;
+  individualSubject = '';
+  individualMessage = '';
+  individualSending = false;
+  individualSuccessMessage = '';
+  individualErrorMessage = '';
 
   constructor(
     private authRoleService: AuthRoleService,
@@ -85,6 +95,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     if (this.isAdmin) {
       this.loadEmailStatus();
       this.loadNotifications();
+      this.loadStudentOptions();
     }
   }
 
@@ -202,8 +213,8 @@ export class HomeComponent implements OnInit, OnDestroy {
         this.emailNotifications = emails;
         this.emailLoading = false;
       },
-      error: () => {
-        this.emailError = 'Failed to load email status.';
+      error: (err) => {
+        this.emailError = this.resolveHttpError(err, 'Failed to load email status.');
         this.emailLoading = false;
       }
     });
@@ -217,10 +228,30 @@ export class HomeComponent implements OnInit, OnDestroy {
         this.inAppNotifications = notifications;
         this.notificationsLoading = false;
       },
-      error: () => {
-        this.notificationsError = 'Failed to load notifications.';
+      error: (err) => {
+        this.notificationsError = this.resolveHttpError(err, 'Failed to load notifications.');
         this.notificationsLoading = false;
       }
+    });
+  }
+
+  loadStudentOptions(force = false): void {
+    if (!force && (this.studentOptionsLoading || this.studentOptions.length > 0)) {
+      return;
+    }
+    this.studentOptionsLoading = true;
+    this.studentOptionsError = '';
+    this.studentService.getStudents({}).subscribe({
+      next: (students) => {
+        this.studentOptions = [...students].sort((a, b) =>
+          a.name.localeCompare(b.name)
+        );
+        this.studentOptionsLoading = false;
+      },
+      error: (err) => {
+        this.studentOptionsError = this.resolveHttpError(err, 'Unable to load students for emailing.');
+        this.studentOptionsLoading = false;
+      },
     });
   }
 
@@ -257,8 +288,8 @@ export class HomeComponent implements OnInit, OnDestroy {
         this.emailNotifications = [];
         this.clearingEmails = false;
       },
-      error: () => {
-        this.emailError = 'Unable to clear email status.';
+      error: (err) => {
+        this.emailError = this.resolveHttpError(err, 'Unable to clear email status.');
         this.clearingEmails = false;
       }
     });
@@ -275,8 +306,8 @@ export class HomeComponent implements OnInit, OnDestroy {
         this.inAppNotifications = [];
         this.clearingNotifications = false;
       },
-      error: () => {
-        this.notificationsError = 'Unable to clear notifications.';
+      error: (err) => {
+        this.notificationsError = this.resolveHttpError(err, 'Unable to clear notifications.');
         this.clearingNotifications = false;
       }
     });
@@ -298,8 +329,8 @@ export class HomeComponent implements OnInit, OnDestroy {
           item.id === updated.id ? { ...item, status: updated.status } : item
         );
       },
-      error: () => {
-        this.notificationsError = 'Unable to mark notification as read.';
+      error: (err) => {
+        this.notificationsError = this.resolveHttpError(err, 'Unable to mark notification as read.');
         this.markingNotificationIds.delete(notification.id);
       },
     });
@@ -328,9 +359,54 @@ export class HomeComponent implements OnInit, OnDestroy {
           this.broadcastMessage = '';
           this.loadEmailStatus();
         },
-        error: () => {
+        error: (err) => {
           this.broadcastSending = false;
-          this.broadcastErrorMessage = 'Unable to send broadcast email.';
+          this.broadcastErrorMessage = this.resolveHttpError(err, 'Unable to send broadcast email.');
+        },
+      });
+  }
+
+  canSendIndividualEmail(): boolean {
+    return (
+      !!this.selectedStudentId &&
+      !!this.individualSubject.trim() &&
+      !!this.individualMessage.trim() &&
+      !this.individualSending
+    );
+  }
+
+  onSendIndividualEmail(): void {
+    if (!this.canSendIndividualEmail()) {
+      return;
+    }
+    const studentId = Number(this.selectedStudentId);
+    if (Number.isNaN(studentId)) {
+      this.individualErrorMessage = 'Select a valid student.';
+      return;
+    }
+    const subject = this.individualSubject.trim();
+    const message = this.individualMessage.trim();
+    this.individualSending = true;
+    this.individualErrorMessage = '';
+    this.individualSuccessMessage = '';
+    this.adminService
+      .sendStudentEmail({ studentId, subject, message })
+      .subscribe({
+        next: (response) => {
+          this.individualSending = false;
+          const studentName =
+            response.studentName ||
+            this.studentOptions.find((s) => s.id === response.studentId)?.name ||
+            'student';
+          this.individualSuccessMessage = `Email sent to ${studentName}.`;
+          this.individualSubject = '';
+          this.individualMessage = '';
+          this.selectedStudentId = null;
+          this.loadEmailStatus();
+        },
+        error: (err) => {
+          this.individualSending = false;
+          this.individualErrorMessage = this.resolveHttpError(err, 'Unable to send email to student.');
         },
       });
   }
@@ -346,5 +422,26 @@ export class HomeComponent implements OnInit, OnDestroy {
     return this.inAppNotifications.filter(
       (notification) => notification.status === 'UNREAD'
     ).length;
+  }
+
+  private resolveHttpError(err: unknown, fallback: string): string {
+    if (err instanceof HttpErrorResponse) {
+      const backendMessage =
+        (typeof err.error === 'string' && err.error) ||
+        err.error?.message ||
+        err.error?.error ||
+        '';
+      if (backendMessage) {
+        return backendMessage;
+      }
+      if (err.status === 0) {
+        return 'Cannot reach server. Is the backend running?';
+      }
+      if (err.statusText) {
+        return `${fallback} (${err.status} ${err.statusText})`;
+      }
+      return `${fallback} (status ${err.status})`;
+    }
+    return fallback;
   }
 }

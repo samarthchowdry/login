@@ -603,14 +603,18 @@
   cursor: not-allowed;
 }
 
-.broadcast-form {
+.broadcast-form,
+.individual-email-form {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
 .broadcast-form input,
-.broadcast-form textarea {
+.broadcast-form textarea,
+.individual-email-form input,
+.individual-email-form textarea,
+.individual-email-form select {
   width: 100%;
   padding: 12px;
   border-radius: 8px;
@@ -620,7 +624,10 @@
 }
 
 .broadcast-form input:focus,
-.broadcast-form textarea:focus {
+.broadcast-form textarea:focus,
+.individual-email-form input:focus,
+.individual-email-form textarea:focus,
+.individual-email-form select:focus {
   outline: none;
   border-color: #667eea;
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);

@@ -54,6 +54,41 @@ export interface StudentPerformance {
   lastAssessedOn?: string;
 }
 
+export interface StudentCourseSummary {
+  courseId?: number;
+  name?: string;
+  code?: string;
+  credits?: number;
+}
+
+export interface StudentSubjectAnalytics {
+  subject: string;
+  assessments: number;
+  totalScore: number;
+  totalMaxScore: number;
+  averageScore?: number;
+  percentage?: number;
+}
+
+export interface StudentProgressReport {
+  studentId?: number;
+  studentName?: string;
+  branch?: string;
+  courses: StudentCourseSummary[];
+  subjects: StudentSubjectAnalytics[];
+  totalAssessments: number;
+  overallAverageScore?: number;
+  overallPercentage?: number;
+  lastAssessmentDate?: string;
+}
+
+export interface StudentProgressReportResponse {
+  generatedAt?: string;
+  totalStudents: number;
+  totalAssessments: number;
+  students: StudentProgressReport[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -167,6 +202,16 @@ export class StudentService {
     return this.http.get<StudentPerformance[]>(`${this.apiUrl}/performance`, {
       headers: this.authRoleService.createRoleHeaders(),
     });
+  }
+
+  /** Generate consolidated student progress report */
+  getProgressReport(): Observable<StudentProgressReportResponse> {
+    return this.http.get<StudentProgressReportResponse>(
+      `http://localhost:8080/api/reports/student-progress`,
+      {
+        headers: this.authRoleService.createRoleHeaders(),
+      }
+    );
   }
 
   /** Fetch total student count */

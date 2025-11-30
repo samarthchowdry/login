@@ -29,6 +29,19 @@ export interface BroadcastEmailResponse {
   subject: string;
 }
 
+export interface IndividualEmailRequest {
+  studentId: number;
+  subject: string;
+  message: string;
+}
+
+export interface IndividualEmailResponse {
+  studentId: number;
+  studentName: string;
+  email: string;
+  subject: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -89,6 +102,15 @@ export class AdminService {
   sendBroadcastEmail(request: BroadcastEmailRequest): Observable<BroadcastEmailResponse> {
     return this.http.post<BroadcastEmailResponse>(
       `${this.apiUrl}/email-broadcast`,
+      request,
+      { headers: this.authRoleService.createRoleHeaders() }
+    );
+  }
+
+  /** Send email to a single student */
+  sendStudentEmail(request: IndividualEmailRequest): Observable<IndividualEmailResponse> {
+    return this.http.post<IndividualEmailResponse>(
+      `${this.apiUrl}/email-student`,
       request,
       { headers: this.authRoleService.createRoleHeaders() }
     );

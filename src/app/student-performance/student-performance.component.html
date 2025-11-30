@@ -10,6 +10,43 @@
     </button>
   </header>
 
+<section class="report-panel" *ngIf="isAdmin">
+  <div class="report-panel-header">
+    <div>
+      <h3>Progress Analytics Report</h3>
+      <p class="report-subtitle">
+        Generate a consolidated view of every student's courses and marks for auditing or exports.
+      </p>
+    </div>
+    <button type="button" class="generate-btn" (click)="generateProgressReport()" [disabled]="reportLoading">
+      <span *ngIf="!reportLoading">Generate Report</span>
+      <span *ngIf="reportLoading">Generating...</span>
+    </button>
+  </div>
+
+  <div class="report-loading" *ngIf="reportLoading">
+    <div class="spinner small"></div>
+    <div class="progress-info">
+      <p>Compiling analytics across all students...</p>
+      <div class="progress-bar">
+        <div class="progress-fill" [style.width.%]="reportProgress"></div>
+      </div>
+      <span class="progress-value">{{ reportProgress }}%</span>
+    </div>
+  </div>
+
+  <p class="error-message" *ngIf="!reportLoading && reportError">{{ reportError }}</p>
+
+  <div class="report-results" *ngIf="!reportLoading && !reportError && reportSuccessMessage">
+    <div class="report-meta">
+      <span>Generated: {{ reportGeneratedAt | date: 'short' }}</span>
+      <span>Students: {{ reportTotals.students }}</span>
+      <span>Assessments: {{ reportTotals.assessments }}</span>
+    </div>
+    <p class="success-message">{{ reportSuccessMessage }}</p>
+  </div>
+</section>
+
   <section class="toolbar">
     <div class="toolbar-group">
       <label for="branchFilter">Branch</label>
@@ -118,8 +155,17 @@
             *ngFor="let student of filtered"
             [class.active]="student.studentId === selectedStudentId"
             (click)="selectStudent(student)">
-            <span class="student-name">{{ student.studentName }}</span>
-            <span class="student-branch">{{ student.branch || '—' }}</span>
+      <div class="student-info">
+        <span class="student-name">{{ student.studentName }}</span>
+        <span class="student-branch">{{ student.branch || '—' }}</span>
+      </div>
+      <button
+        type="button"
+        class="download-btn"
+        (click)="downloadStudentCsv(student); $event.stopPropagation()"
+      >
+        CSV
+      </button>
           </li>
         </ul>
       </aside>

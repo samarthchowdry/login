@@ -42,6 +42,206 @@
   cursor: not-allowed;
 }
 
+.report-panel {
+  margin-bottom: 24px;
+  padding: 20px;
+  border-radius: 14px;
+  border: 1px solid #e3e8ee;
+  background: #fff;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.report-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.report-panel-header h3 {
+  margin: 0;
+  color: #0f172a;
+}
+
+.report-subtitle {
+  margin: 4px 0 0;
+  color: #475569;
+}
+
+.generate-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 10px 22px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+  color: #fff;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.generate-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.report-loading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #475569;
+  font-weight: 500;
+  flex-wrap: wrap;
+}
+
+.progress-info {
+  flex: 1 1 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 12px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  overflow: hidden;
+  border: 1px solid #cbd5f5;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(135deg, #0d6efd, #60a5fa);
+  transition: width 0.2s ease;
+}
+
+.progress-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.report-results {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.report-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 14px;
+  color: #475569;
+}
+
+.report-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.report-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 18px;
+  background: #fdfdfd;
+}
+
+.report-card-header {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+}
+
+.report-card-header h4 {
+  margin: 0;
+  color: #0f172a;
+}
+
+.report-card-meta {
+  margin: 2px 0 0;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.report-card-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.report-card-section {
+  margin-top: 12px;
+}
+
+.report-card-section h5 {
+  margin: 0 0 8px 0;
+  color: #0f172a;
+}
+
+.course-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.course-list li {
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.table-wrapper table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.table-wrapper th,
+.table-wrapper td {
+  text-align: left;
+  padding: 8px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.table-wrapper th {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.table-wrapper td {
+  color: #1f2933;
+}
+
+.empty-state {
+  margin: 0;
+  color: #94a3b8;
+  font-style: italic;
+}
+
 .toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -351,6 +551,10 @@
   background: #f1f5f9;
   cursor: pointer;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
 }
 
 .student-list li:hover {
@@ -366,6 +570,28 @@
 .student-name {
   display: block;
   font-weight: 600;
+}
+
+.student-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.download-btn {
+  border: none;
+  background: #0d6efd;
+  color: #fff;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.download-btn:hover {
+  opacity: 0.8;
 }
 
 .student-branch {
@@ -540,6 +766,10 @@
 @media (max-width: 768px) {
   .performance-container {
     padding: 16px;
+  }
+
+  .report-panel-header {
+    flex-direction: column;
   }
 
   .page-header {
