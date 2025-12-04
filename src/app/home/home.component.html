@@ -73,6 +73,16 @@
         </div>
         <div *ngIf="emailLoading" class="loading-message">Loading email status...</div>
         <div *ngIf="emailError" class="error-message">{{ emailError }}</div>
+        
+        <!-- Email Status Alerts -->
+        <div *ngIf="!emailLoading && !emailError && emailNotifications.length > 0" class="email-status-alerts">
+          <div *ngIf="hasPendingEmails" class="email-alert email-alert-pending">
+            <strong>⚠️ Email Pending:</strong> {{ pendingEmailCount }} email(s) are pending and will be sent by the scheduler.
+          </div>
+          <div *ngIf="hasFailedEmails" class="email-alert email-alert-failed">
+            <strong>❌ Email Not Sent:</strong> {{ failedEmailCount }} email(s) failed to send. Check the table below for details.
+          </div>
+        </div>
         <div *ngIf="!emailLoading && !emailError" class="table-container">
           <table class="admin-table">
             <thead>
@@ -104,54 +114,12 @@
         </div>
       </div>
 
-      <!-- Broadcast Email -->
+      <!-- Combined Email Section -->
       <div class="admin-section">
         <div class="admin-section-header">
-          <h2>Send Broadcast Email</h2>
-        </div>
-        <div class="broadcast-form">
-          <label class="form-label" for="broadcast-subject">Subject</label>
-          <input
-            id="broadcast-subject"
-            type="text"
-            name="broadcastSubject"
-            [(ngModel)]="broadcastSubject"
-            placeholder="Exam timetable update"
-          />
-
-          <label class="form-label" for="broadcast-message">Message</label>
-          <textarea
-            id="broadcast-message"
-            name="broadcastMessage"
-            rows="5"
-            [(ngModel)]="broadcastMessage"
-            placeholder="Dear students, ..."
-          ></textarea>
-
-          <div class="form-actions">
-            <button
-              class="broadcast-btn"
-              (click)="onSendBroadcastEmail()"
-              [disabled]="!canSendBroadcast()"
-            >
-              {{ broadcastSending ? 'Sending…' : 'Send to all students' }}
-            </button>
-          </div>
-
-          <div *ngIf="broadcastSuccessMessage" class="success-message">
-            {{ broadcastSuccessMessage }}
-          </div>
-          <div *ngIf="broadcastErrorMessage" class="error-message">
-            {{ broadcastErrorMessage }}
-          </div>
-        </div>
-      </div>
-
-      <!-- Individual Student Email -->
-      <div class="admin-section">
-        <div class="admin-section-header">
-          <h2>Send Individual Email</h2>
+          <h2>Send Email</h2>
           <button
+            *ngIf="emailType === 'individual'"
             class="clear-btn"
             type="button"
             (click)="loadStudentOptions(true)"
@@ -160,45 +128,90 @@
             {{ studentOptionsLoading ? 'Loading…' : 'Reload students' }}
           </button>
         </div>
-        <div *ngIf="studentOptionsError" class="error-message">
-          {{ studentOptionsError }}
-        </div>
-        <div class="individual-email-form">
-          <label class="form-label" for="student-select">Student</label>
+        <div class="email-form">
+          <label class="form-label" for="email-type-select">Email Type</label>
           <select
-            id="student-select"
-            [(ngModel)]="selectedStudentId"
-            name="selectedStudentId"
+            id="email-type-select"
+            [(ngModel)]="emailType"
+            name="emailType"
+            class="email-type-select"
+            (ngModelChange)="onEmailTypeChange()"
           >
-            <option [ngValue]="null" disabled>Select a student</option>
-            <option
-              *ngFor="let student of studentOptions"
-              [value]="student.id"
-            >
-              {{ student.name }} (ID: {{ student.id }})
-            </option>
+            <option value="broadcast">Send Broadcast Email</option>
+            <option value="individual">Send Individual Email</option>
           </select>
 
-          <label class="form-label" for="individual-subject">Subject</label>
+          <!-- Individual Email - Student Selection -->
+          <div *ngIf="emailType === 'individual'">
+            <div *ngIf="studentOptionsError" class="error-message">
+              {{ studentOptionsError }}
+            </div>
+            <label class="form-label" for="student-select">Student</label>
+            <select
+              id="student-select"
+              [(ngModel)]="selectedStudentId"
+              name="selectedStudentId"
+            >
+              <option [ngValue]="null" disabled>Select a student</option>
+              <option
+                *ngFor="let student of studentOptions"
+                [value]="student.id"
+              >
+                {{ student.name }} (ID: {{ student.id }})
+              </option>
+            </select>
+          </div>
+
+          <!-- Subject Field -->
+          <label class="form-label" for="email-subject">Subject</label>
           <input
-            id="individual-subject"
+            *ngIf="emailType === 'broadcast'"
+            id="email-subject"
+            type="text"
+            name="broadcastSubject"
+            [(ngModel)]="broadcastSubject"
+            placeholder="Exam timetable update"
+          />
+          <input
+            *ngIf="emailType === 'individual'"
+            id="email-subject"
             type="text"
             name="individualSubject"
             [(ngModel)]="individualSubject"
             placeholder="Hello from admin"
           />
 
-          <label class="form-label" for="individual-message">Message</label>
+          <!-- Message Field -->
+          <label class="form-label" for="email-message">Message</label>
           <textarea
-            id="individual-message"
+            *ngIf="emailType === 'broadcast'"
+            id="email-message"
+            name="broadcastMessage"
+            rows="5"
+            [(ngModel)]="broadcastMessage"
+            placeholder="Dear students, ..."
+          ></textarea>
+          <textarea
+            *ngIf="emailType === 'individual'"
+            id="email-message"
             name="individualMessage"
             rows="5"
             [(ngModel)]="individualMessage"
             placeholder="Hi John, ..."
           ></textarea>
 
+          <!-- Send Button -->
           <div class="form-actions">
             <button
+              *ngIf="emailType === 'broadcast'"
+              class="broadcast-btn"
+              (click)="onSendBroadcastEmail()"
+              [disabled]="!canSendBroadcast()"
+            >
+              {{ broadcastSending ? 'Sending…' : 'Send to all students' }}
+            </button>
+            <button
+              *ngIf="emailType === 'individual'"
               class="broadcast-btn"
               type="button"
               (click)="onSendIndividualEmail()"
@@ -208,11 +221,22 @@
             </button>
           </div>
 
-          <div *ngIf="individualSuccessMessage" class="success-message">
-            {{ individualSuccessMessage }}
+          <!-- Success/Error Messages -->
+          <div *ngIf="emailType === 'broadcast'">
+            <div *ngIf="broadcastSuccessMessage" class="success-message">
+              {{ broadcastSuccessMessage }}
+            </div>
+            <div *ngIf="broadcastErrorMessage" class="error-message">
+              {{ broadcastErrorMessage }}
+            </div>
           </div>
-          <div *ngIf="individualErrorMessage" class="error-message">
-            {{ individualErrorMessage }}
+          <div *ngIf="emailType === 'individual'">
+            <div *ngIf="individualSuccessMessage" class="success-message">
+              {{ individualSuccessMessage }}
+            </div>
+            <div *ngIf="individualErrorMessage" class="error-message">
+              {{ individualErrorMessage }}
+            </div>
           </div>
         </div>
       </div>

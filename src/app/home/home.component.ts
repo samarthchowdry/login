@@ -54,6 +54,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   individualSending = false;
   individualSuccessMessage = '';
   individualErrorMessage = '';
+  emailType: 'broadcast' | 'individual' = 'broadcast';
 
   constructor(
     private authRoleService: AuthRoleService,
@@ -76,6 +77,21 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   canSendBroadcast(): boolean {
     return !!this.broadcastSubject.trim() && !!this.broadcastMessage.trim() && !this.broadcastSending;
+  }
+
+  onEmailTypeChange(): void {
+    // Clear messages when switching email types
+    if (this.emailType === 'broadcast') {
+      this.individualSuccessMessage = '';
+      this.individualErrorMessage = '';
+    } else {
+      this.broadcastSuccessMessage = '';
+      this.broadcastErrorMessage = '';
+      // Load student options if not already loaded
+      if (this.studentOptions.length === 0 && !this.studentOptionsLoading) {
+        this.loadStudentOptions();
+      }
+    }
   }
 
   ngOnDestroy(): void {
@@ -354,10 +370,14 @@ export class HomeComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (response) => {
           this.broadcastSending = false;
-          this.broadcastSuccessMessage = `Email sent to ${response.recipients} students.`;
+          this.broadcastSuccessMessage = `Email queued for ${response.recipients} students. Checking status...`;
           this.broadcastSubject = '';
           this.broadcastMessage = '';
           this.loadEmailStatus();
+          // Check email status after a delay to see if they actually sent
+          setTimeout(() => {
+            this.checkEmailStatusAfterSend(subject);
+          }, 3000);
         },
         error: (err) => {
           this.broadcastSending = false;
@@ -386,6 +406,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     }
     const subject = this.individualSubject.trim();
     const message = this.individualMessage.trim();
+    const studentName = this.studentOptions.find((s) => s.id === studentId)?.name || 'student';
     this.individualSending = true;
     this.individualErrorMessage = '';
     this.individualSuccessMessage = '';
@@ -394,21 +415,70 @@ export class HomeComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (response) => {
           this.individualSending = false;
-          const studentName =
-            response.studentName ||
-            this.studentOptions.find((s) => s.id === response.studentId)?.name ||
-            'student';
-          this.individualSuccessMessage = `Email sent to ${studentName}.`;
+          const name = response.studentName || studentName;
+          this.individualSuccessMessage = `Email queued for ${name}. Checking status...`;
           this.individualSubject = '';
           this.individualMessage = '';
           this.selectedStudentId = null;
           this.loadEmailStatus();
+          // Check email status after a delay to see if it actually sent
+          setTimeout(() => {
+            this.checkEmailStatusAfterSend(subject, name);
+          }, 3000);
         },
         error: (err) => {
           this.individualSending = false;
           this.individualErrorMessage = this.resolveHttpError(err, 'Unable to send email to student.');
         },
       });
+  }
+
+  private checkEmailStatusAfterSend(subject: string, recipientName?: string): void {
+    this.loadEmailStatus();
+    setTimeout(() => {
+      // Find the most recent email with this subject
+      const recentEmail = this.emailNotifications
+        .filter(email => email.subject === subject)
+        .sort((a, b) => (b.id || 0) - (a.id || 0))[0];
+
+      if (!recentEmail) {
+        return;
+      }
+
+      if (recentEmail.status === 'FAILED') {
+        if (recipientName) {
+          this.individualSuccessMessage = '';
+          this.individualErrorMessage = `Email not sent to ${recipientName}. Check email status table for details.`;
+        } else {
+          this.broadcastSuccessMessage = '';
+          this.broadcastErrorMessage = 'Some emails failed to send. Check email status table for details.';
+        }
+      } else if (recentEmail.status === 'SENT') {
+        if (recipientName) {
+          this.individualSuccessMessage = `Email sent to ${recipientName}.`;
+          this.individualErrorMessage = '';
+        } else {
+          // For broadcast, check if all are sent
+          const pendingCount = this.emailNotifications.filter(e => e.subject === subject && e.status === 'PENDING').length;
+          const failedCount = this.emailNotifications.filter(e => e.subject === subject && e.status === 'FAILED').length;
+          if (failedCount > 0) {
+            this.broadcastSuccessMessage = '';
+            this.broadcastErrorMessage = `${failedCount} email(s) failed to send. Check email status table for details.`;
+          } else if (pendingCount > 0) {
+            this.broadcastSuccessMessage = `${this.emailNotifications.filter(e => e.subject === subject && e.status === 'SENT').length} email(s) sent. ${pendingCount} still pending.`;
+          } else {
+            this.broadcastSuccessMessage = 'All emails sent successfully.';
+          }
+        }
+      } else if (recentEmail.status === 'PENDING') {
+        if (recipientName) {
+          this.individualSuccessMessage = `Email pending for ${recipientName}. It will be sent by the scheduler.`;
+        } else {
+          const pendingCount = this.emailNotifications.filter(e => e.subject === subject && e.status === 'PENDING').length;
+          this.broadcastSuccessMessage = `${pendingCount} email(s) pending. They will be sent by the scheduler.`;
+        }
+      }
+    }, 1000);
   }
 
   toggleNotificationsPanel(): void {
@@ -422,6 +492,26 @@ export class HomeComponent implements OnInit, OnDestroy {
     return this.inAppNotifications.filter(
       (notification) => notification.status === 'UNREAD'
     ).length;
+  }
+
+  get pendingEmailCount(): number {
+    return this.emailNotifications.filter(
+      (email) => email.status === 'PENDING'
+    ).length;
+  }
+
+  get failedEmailCount(): number {
+    return this.emailNotifications.filter(
+      (email) => email.status === 'FAILED'
+    ).length;
+  }
+
+  get hasPendingEmails(): boolean {
+    return this.pendingEmailCount > 0;
+  }
+
+  get hasFailedEmails(): boolean {
+    return this.failedEmailCount > 0;
   }
 
   private resolveHttpError(err: unknown, fallback: string): string {

@@ -11,6 +11,7 @@ import { CourseUpdateComponent } from './course-update/course-update.component';
 import { StudentPerformanceComponent } from './student-performance/student-performance.component';
 import { OverviewComponent } from './overview/overview.component';
 import { NotificationsComponent } from './notifications/notifications.component';
+import { EmailQueueComponent } from './email-queue/email-queue.component';
 
 export const routes: Routes = [
   {
@@ -65,5 +66,9 @@ export const routes: Routes = [
   {
     path: 'notifications',
     component: NotificationsComponent
+  },
+  {
+    path: 'email-queue',
+    component: EmailQueueComponent
   }
 ];

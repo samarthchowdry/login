@@ -524,6 +524,40 @@
   font-style: italic;
 }
 
+/* Email Status Alerts */
+.email-status-alerts {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.email-alert {
+  padding: 15px 20px;
+  border-radius: 8px;
+  border-left: 4px solid;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.email-alert-pending {
+  background: #fff9c4;
+  border-left-color: #f57f17;
+  color: #f57f17;
+}
+
+.email-alert-failed {
+  background: #ffebee;
+  border-left-color: #c62828;
+  color: #c62828;
+}
+
+.email-alert strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 1rem;
+}
+
 /* Notifications List */
 .notifications-list {
   display: flex;
@@ -603,18 +637,15 @@
   cursor: not-allowed;
 }
 
-.broadcast-form,
-.individual-email-form {
+.email-form {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.broadcast-form input,
-.broadcast-form textarea,
-.individual-email-form input,
-.individual-email-form textarea,
-.individual-email-form select {
+.email-form input,
+.email-form textarea,
+.email-form select {
   width: 100%;
   padding: 12px;
   border-radius: 8px;
@@ -623,14 +654,18 @@
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.broadcast-form input:focus,
-.broadcast-form textarea:focus,
-.individual-email-form input:focus,
-.individual-email-form textarea:focus,
-.individual-email-form select:focus {
+.email-form input:focus,
+.email-form textarea:focus,
+.email-form select:focus {
   outline: none;
   border-color: #667eea;
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+.email-type-select {
+  font-weight: 600;
+  background-color: #f9fafb;
+  cursor: pointer;
 }
 
 .form-label {

@@ -214,6 +214,17 @@ export class StudentService {
     );
   }
 
+  /** Email student progress report to admin */
+  emailProgressReport(report: StudentProgressReportResponse): Observable<string> {
+    return this.http.post<string>(
+      `http://localhost:8080/api/reports/student-progress/email`,
+      report,
+      {
+        headers: this.authRoleService.createRoleHeaders(),
+      }
+    );
+  }
+
   /** Fetch total student count */
   getStudentsCount(): Observable<number> {
     return this.http.get<number>(`${this.apiUrl}/count`);

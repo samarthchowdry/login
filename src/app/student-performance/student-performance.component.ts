@@ -67,7 +67,8 @@ export class StudentPerformanceComponent implements OnInit, OnDestroy {
   private roleSub?: Subscription;
   private reportTimer?: ReturnType<typeof setInterval>;
   private reportStartTime = 0;
-  private readonly reportDurationMs = 10000;
+  // Duration for the fake loading/progress animation (8 seconds)
+  private readonly reportDurationMs = 8000;
   private pendingReportResponse: StudentProgressReportResponse | null = null;
   private progressCompleted = false;
 
@@ -277,6 +278,10 @@ export class StudentPerformanceComponent implements OnInit, OnDestroy {
     if (needsSelection) {
       this.selectedStudentId = student.studentId;
       this.selectedStudentName = student.studentName ?? '';
+      this.selectedStudentPerformance = student;
+    } else {
+      // Ensure selectedStudentPerformance is set even if student is already selected
+      this.selectedStudentPerformance = student;
     }
     void this.loadStudentSubjects(true);
   }
@@ -555,7 +560,18 @@ export class StudentPerformanceComponent implements OnInit, OnDestroy {
         students.reduce((sum, item) => sum + (item.totalAssessments ?? 0), 0),
     };
     this.exportReportAsCsv(response);
-    this.reportSuccessMessage = `Student progress report downloaded for ${this.reportTotals.students} students.`;
+    
+    // Email the report to admin
+    this.studentService.emailProgressReport(response).subscribe({
+      next: (message) => {
+        this.reportSuccessMessage = `Student progress report downloaded and emailed to admin. ${this.reportTotals.students} students.`;
+      },
+      error: (error) => {
+        console.error('Error emailing report:', error);
+        this.reportSuccessMessage = `Student progress report downloaded for ${this.reportTotals.students} students. (Email failed: ${error.error || error.message || 'Unknown error'})`;
+      },
+    });
+    
     this.progressReport = [];
     this.reportLoading = false;
   }
@@ -586,20 +602,8 @@ export class StudentPerformanceComponent implements OnInit, OnDestroy {
       'Average Score',
       'Overall Percentage',
       'Last Assessment Date',
-      'Courses',
-      'Subjects',
     ];
     const rows = students.map((student) => {
-      const courseSummary = (student.courses ?? [])
-        .map((course) => course?.name || course?.code || 'Course')
-        .join(' | ');
-      const subjectSummary = (student.subjects ?? [])
-        .map((subject) => {
-          const avg = this.formatNumber(subject.averageScore);
-          const percent = this.formatNumber(subject.percentage);
-          return `${subject.subject ?? 'Subject'} (assessments: ${subject.assessments ?? 0}, avg: ${avg}, %: ${percent})`;
-        })
-        .join(' | ');
       return [
         student.studentName ?? '',
         student.branch ?? '',
@@ -607,8 +611,6 @@ export class StudentPerformanceComponent implements OnInit, OnDestroy {
         this.formatNumber(student.overallAverageScore),
         this.formatNumber(student.overallPercentage),
         student.lastAssessmentDate ?? '',
-        courseSummary,
-        subjectSummary,
       ];
     });
     const csv = this.buildCsv([headers, ...rows]);

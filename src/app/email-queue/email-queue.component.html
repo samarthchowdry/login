@@ -1,0 +1,142 @@
+<div class="email-queue-container">
+  <h2>Scheduler Monitoring</h2>
+
+  <div *ngIf="error" class="error">
+    {{ error }}
+  </div>
+
+  <section class="panel">
+    <div class="panel-header">
+      <h3>Email Queue (Pending / Failed / Sent)</h3>
+      <div class="actions">
+        <button (click)="onRefresh()" class="btn" [disabled]="loadingQueue || loadingReports">
+          Refresh
+        </button>
+        <button (click)="onProcessQueue()" class="btn primary" [disabled]="processingQueue">
+          {{ processingQueue ? 'Processing…' : 'Process Queue Now' }}
+        </button>
+      </div>
+    </div>
+    <div *ngIf="loadingQueue">Loading email queue...</div>
+    <table *ngIf="!loadingQueue && emailQueue.length" class="table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>To</th>
+          <th>Subject</th>
+          <th>Status</th>
+          <th>Retry Count</th>
+          <th>Last Attempt</th>
+          <th>Sent Time</th>
+          <th>Error</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of emailQueue">
+          <td>{{ item.id }}</td>
+          <td>{{ item.toEmail }}</td>
+          <td>{{ item.subject }}</td>
+          <td>
+            <span [ngClass]="getStatusClass(item.status)">
+              {{ item.status }}
+            </span>
+          </td>
+          <td>{{ item.retryCount ?? 0 }}</td>
+          <td>{{ formatDate(item.lastAttemptTime ?? null) }}</td>
+          <td>{{ formatDate(item.sentTime) }}</td>
+          <td class="error-text">
+            {{ item.lastError || '-' }}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p *ngIf="!loadingQueue && !emailQueue.length">
+      No email notifications in the queue yet.
+    </p>
+  </section>
+
+  <section class="panel">
+    <div class="panel-header">
+      <h3>Daily Student Report Status</h3>
+      <div class="actions">
+        <label class="inline-label">
+          Report time:
+          <input
+            type="number"
+            min="0"
+            max="23"
+            [(ngModel)]="reportHour"
+            placeholder="Hour"
+            style="width: 60px;"
+          />
+          :
+          <input
+            type="number"
+            min="0"
+            max="59"
+            [(ngModel)]="reportMinute"
+            placeholder="Minute"
+            style="width: 60px;"
+          />
+          <button 
+            (click)="onUpdateSchedule()" 
+            class="btn" 
+            [disabled]="updatingSchedule"
+            style="margin-left: 8px;"
+          >
+            {{ updatingSchedule ? 'Updating...' : 'Update Time' }}
+          </button>
+        </label>
+        <button 
+          (click)="onTriggerDailyReport()" 
+          class="btn primary" 
+          [disabled]="triggeringReport"
+        >
+          {{ triggeringReport ? 'Generating...' : 'Send Daily Report Now' }}
+        </button>
+        <button 
+          (click)="onTriggerProgressAnalyticsReport()" 
+          class="btn primary" 
+          [disabled]="triggeringProgressReport"
+          style="margin-left: 8px;"
+        >
+          {{ triggeringProgressReport ? 'Generating...' : 'Send Progress Analytics Report Now' }}
+        </button>
+      </div>
+    </div>
+    <div *ngIf="loadingReports">Loading report status...</div>
+    <table *ngIf="!loadingReports && dailyReports.length" class="table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>File Name</th>
+          <th>Status</th>
+          <th>Generated At</th>
+          <th>Sent At</th>
+          <th>Error</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let report of dailyReports">
+          <td>{{ report.reportDate }}</td>
+          <td>{{ report.fileName }}</td>
+          <td>
+            <span [ngClass]="getStatusClass(report.status)">
+              {{ report.status }}
+            </span>
+          </td>
+          <td>{{ formatDate(report.generatedAt ?? null) }}</td>
+          <td>{{ formatDate(report.sentAt ?? null) }}</td>
+          <td class="error-text">
+            {{ report.errorMessage || '-' }}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p *ngIf="!loadingReports && !dailyReports.length">
+      No daily reports have been generated yet.
+    </p>
+  </section>
+</div>
+
+
