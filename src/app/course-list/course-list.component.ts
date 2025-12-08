@@ -19,7 +19,7 @@ export class CourseListComponent implements OnInit, OnDestroy {
   isLoading = false;
   errorMessage = '';
   userRole: UserRole = 'STUDENT';
-  private roleSub?: Subscription;
+  private subscriptions = new Subscription();
 
   filters = {
     name: '',
@@ -36,34 +36,38 @@ export class CourseListComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.roleSub = this.authRoleService.role$.subscribe((role) => {
-      this.userRole = role;
-    });
+    this.subscriptions.add(
+      this.authRoleService.role$.subscribe((role) => {
+        this.userRole = role;
+      })
+    );
     this.loadCourses();
   }
 
   ngOnDestroy(): void {
-    this.roleSub?.unsubscribe();
+    this.subscriptions.unsubscribe();
   }
 
   loadCourses(): void {
     this.isLoading = true;
     this.errorMessage = '';
 
-    this.courseService.getCourses(this.filters).subscribe({
-      next: (courses) => {
-        this.courses = courses;
-        this.filteredCourses = [...this.courses];
-        this.isLoading = false;
-        this.currentPage = 1;
-        console.log('Courses loaded:', courses);
-      },
-      error: (error) => {
-        console.error('Error loading courses:', error);
-        this.errorMessage = 'Error loading courses. Please try again.';
-        this.isLoading = false;
-      }
-    });
+    this.subscriptions.add(
+      this.courseService.getCourses(this.filters).subscribe({
+        next: (courses) => {
+          this.courses = courses;
+          this.filteredCourses = [...this.courses];
+          this.isLoading = false;
+          this.currentPage = 1;
+          console.log('Courses loaded:', courses);
+        },
+        error: (error) => {
+          console.error('Error loading courses:', error);
+          this.errorMessage = 'Error loading courses. Please try again.';
+          this.isLoading = false;
+        }
+      })
+    );
   }
 
   onSearch(): void {
@@ -107,16 +111,18 @@ export class CourseListComponent implements OnInit, OnDestroy {
       return;
     }
     if (confirm('Are you sure you want to delete this course?')) {
-      this.courseService.deleteCourse(id).subscribe({
-        next: () => {
-          console.log('Course deleted successfully');
-          this.loadCourses();
-        },
-        error: (error) => {
-          console.error('Error deleting course:', error);
-          alert('Error deleting course. Please try again.');
-        }
-      });
+      this.subscriptions.add(
+        this.courseService.deleteCourse(id).subscribe({
+          next: () => {
+            console.log('Course deleted successfully');
+            this.loadCourses();
+          },
+          error: (error) => {
+            console.error('Error deleting course:', error);
+            alert('Error deleting course. Please try again.');
+          }
+        })
+      );
     }
   }
 

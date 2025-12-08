@@ -37,12 +37,15 @@
           <p>Analyse assessment trends across every student and branch.</p>
           <a routerLink="/student-performance" class="feature-link">Open Performance Dashboard</a>
         </div>
-        <ng-container *ngIf="isAdmin">
+        <ng-container *ngIf="canManageStudents">
           <div class="feature-card">
             <h3>Add New Student</h3>
             <p>Add a new student to the database.</p>
             <a routerLink="/items" class="feature-link">Add Student</a>
           </div>
+        </ng-container>
+
+        <ng-container *ngIf="isAdmin">
           <div class="feature-card admin-card">
             <h3>Role Management</h3>
             <p>Promote users to admin and manage system roles.</p>

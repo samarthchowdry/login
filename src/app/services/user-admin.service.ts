@@ -25,8 +25,10 @@ export class UserAdminService {
   constructor(private http: HttpClient, private authRoleService: AuthRoleService) {}
 
   updateRole(payload: RoleUpdateRequest): Observable<RoleUpdateResponse> {
+    const currentRole = this.authRoleService.getRole();
     const headers = this.authRoleService.createRoleHeaders({
       'Content-Type': 'application/json',
+      'X-Role': currentRole, // Add X-Role header required by backend
     });
     return this.http
       .patch<RoleUpdateResponse | string>(this.apiUrl, payload, {

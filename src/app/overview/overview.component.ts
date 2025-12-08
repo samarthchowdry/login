@@ -15,6 +15,7 @@ interface OverviewFeature {
   cta: string;
   link: string[];
   queryParams?: Record<string, any>;
+  requiresManageStudents?: boolean;
 }
 
 interface AnalyticsSlice {
@@ -37,6 +38,21 @@ export class OverviewComponent implements OnInit, OnDestroy {
       description: 'View and manage students in the student database.',
       cta: 'View Students List',
       link: ['/student-list'],
+      requiresManageStudents: true,
+    },
+    {
+      title: 'Add New Student',
+      description: 'Quickly add a new student (Teachers and Admins).',
+      cta: 'Add Student',
+      link: ['/items'],
+      requiresManageStudents: true,
+    },
+    {
+      title: 'Manage Students',
+      description: 'Create, view, and manage all students (Teachers and Admins).',
+      cta: 'Manage Students',
+      link: ['/student-management'],
+      requiresManageStudents: true,
     },
     {
       title: 'Courses Management',
@@ -50,6 +66,12 @@ export class OverviewComponent implements OnInit, OnDestroy {
         'Analyse assessment trends across every student and branch.',
       cta: 'Open Performance Dashboard',
       link: ['/student-performance'],
+    },
+    {
+      title: 'User Management',
+      description: 'Create new administrators and teachers (Admin Only).',
+      cta: 'Manage Users',
+      link: ['/user-management'],
     },
   ];
   visibleFeatures: OverviewFeature[] = [...this.features];
@@ -69,6 +91,7 @@ export class OverviewComponent implements OnInit, OnDestroy {
   private analyticsSub?: Subscription;
   private roleSub?: Subscription;
   isAdmin = false;
+  canManageStudents = false;
 
   constructor(
     private studentService: StudentService,
@@ -79,6 +102,7 @@ export class OverviewComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     const currentRole = this.authRoleService.getRole();
     this.isAdmin = currentRole === 'ADMIN';
+    this.canManageStudents = currentRole === 'ADMIN' || currentRole === 'TEACHER';
     this.updateFeatureVisibility(currentRole);
     this.loadStats();
     if (this.isAdmin) {
@@ -86,6 +110,7 @@ export class OverviewComponent implements OnInit, OnDestroy {
     }
     this.roleSub = this.authRoleService.role$.subscribe((role) => {
       const adminNow = role === 'ADMIN';
+      this.canManageStudents = role === 'ADMIN' || role === 'TEACHER';
       this.updateFeatureVisibility(role);
       if (adminNow && !this.isAdmin && !this.analyticsSummary.length) {
         this.loadShortAnalytics();
@@ -179,11 +204,25 @@ export class OverviewComponent implements OnInit, OnDestroy {
 
   private updateFeatureVisibility(role: UserRole): void {
     const canViewAnalytics = role === 'ADMIN' || role === 'TEACHER';
-    this.visibleFeatures = canViewAnalytics
-      ? this.features
-      : this.features.filter(
-          (feature) => feature.link?.[0] !== '/student-performance'
-        );
+    const isAdmin = role === 'ADMIN';
+    const canManageStudents = role === 'ADMIN' || role === 'TEACHER';
+    
+    this.visibleFeatures = this.features.filter((feature) => {
+      // Hide student management/add student if user cannot manage students
+      if (feature.requiresManageStudents && !canManageStudents) {
+        return false;
+      }
+      // Hide Performance Insights if not admin/teacher
+      if (feature.link?.[0] === '/student-performance') {
+        return canViewAnalytics;
+      }
+      // Hide User Management if not admin
+      if (feature.link?.[0] === '/user-management') {
+        return isAdmin;
+      }
+      // Show all other features
+      return true;
+    });
   }
 }
 

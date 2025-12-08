@@ -18,6 +18,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 })
 export class HomeComponent implements OnInit, OnDestroy {
   isAdmin = false;
+  canManageStudents = false;
   canViewAnalytics = false;
   private roleSub?: Subscription;
   private routeSub?: Subscription;
@@ -102,6 +103,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   private updateRoleState(role: UserRole): void {
     this.isAdmin = role === 'ADMIN';
+    this.canManageStudents = role === 'ADMIN' || role === 'TEACHER';
     this.canViewAnalytics = role === 'ADMIN' || role === 'TEACHER';
     const wantsAnalytics =
       this.route.snapshot.queryParamMap.get('view') === 'analytics';

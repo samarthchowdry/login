@@ -12,8 +12,18 @@ import { StudentPerformanceComponent } from './student-performance/student-perfo
 import { OverviewComponent } from './overview/overview.component';
 import { NotificationsComponent } from './notifications/notifications.component';
 import { EmailQueueComponent } from './email-queue/email-queue.component';
+import { UserManagementComponent } from './user-management/user-management.component';
+import { StudentManagementComponent } from './student-management/student-management.component';
 
 export const routes: Routes = [
+  {
+    path: 'user-management',
+    component: UserManagementComponent
+  },
+  {
+    path: 'student-management',
+    component: StudentManagementComponent
+  },
   {
     path: '',
     redirectTo: 'overview',

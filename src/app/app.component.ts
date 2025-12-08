@@ -1,7 +1,8 @@
-import { Component, AfterViewInit, NgZone } from '@angular/core';
+import { Component, AfterViewInit, NgZone, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule, RouterOutlet } from '@angular/router';
+import { Router, RouterModule, RouterOutlet, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
 import { environment } from '../environments/environment';
 import { AuthRoleService, UserRole } from './services/auth-role.service';
 
@@ -14,7 +15,7 @@ declare const google: any;
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
 })
-export class AppComponent implements AfterViewInit {
+export class AppComponent implements AfterViewInit, OnInit {
   username = '';
   password = '';
   isLoggedIn = false;
@@ -28,6 +29,16 @@ export class AppComponent implements AfterViewInit {
   signupPreview: { name: string; email: string; picture?: string; googleSub?: string } | null = null;
   loginError = '';
   isAuthenticating = false;
+  currentRoute = '';
+  
+  /**
+   * Checks if we should show the login form.
+   * Returns true if not logged in.
+   */
+  get shouldShowStudentLogin(): boolean {
+    return !this.isLoggedIn;
+  }
+  
   private static readonly GOOGLE_CLIENT_ID = environment.GOOGLE_CLIENT_ID;
 
   private googleInitAttempts = 0;
@@ -41,9 +52,31 @@ export class AppComponent implements AfterViewInit {
     private router: Router
   ) {
     this.userRole = this.authRoleService.getRole();
+    // Check if user is already authenticated
+    this.isLoggedIn = this.authRoleService.isAuthenticated();
+    
     this.authRoleService.role$.subscribe((role) => {
       this.userRole = role;
+      // Update login status based on authentication
+      this.isLoggedIn = this.authRoleService.isAuthenticated();
     });
+  }
+
+  ngOnInit(): void {
+    // Track current route to show/hide login form appropriately
+    this.router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe((event: any) => {
+        this.currentRoute = event.urlAfterRedirects || event.url || '';
+        // Update login status when route changes (in case of navigation after login)
+        this.isLoggedIn = this.authRoleService.isAuthenticated();
+      });
+    
+    // Set initial route
+    this.currentRoute = this.router.url || '';
+    
+    // Update login status on init
+    this.isLoggedIn = this.authRoleService.isAuthenticated();
   }
 
   ngAfterViewInit(): void {
@@ -134,7 +167,7 @@ export class AppComponent implements AfterViewInit {
     const password = this.password.trim();
 
     if (!username || !password) {
-      this.loginError = 'Please enter both username and password.';
+      this.loginError = 'Please enter both username/email and password.';
       return;
     }
 
@@ -142,18 +175,41 @@ export class AppComponent implements AfterViewInit {
     this.loginError = '';
 
     try {
-      const role = await this.resolveRoleAsync(username, password);
-      if (!role) {
-        this.loginError = 'Invalid credentials. Try again.';
+      const response = await fetch('http://localhost:8080/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Invalid credentials' }));
+        this.loginError = errorData.message || 'Invalid credentials';
+        this.isAuthenticating = false;
         return;
       }
 
-      await this.finishLogin(role);
+      const data = await response.json();
+      this.ngZone.run(() => {
+        this.userName = data?.name || '';
+        this.userEmail = data?.email || '';
+        const roleFromServer = (data?.role as UserRole) || 'STUDENT';
+        const token = data?.token; // JWT token from backend
+
+        // Store role and JWT token for production-ready authentication
+        if (token) {
+          this.authRoleService.setRole(roleFromServer, token);
+        } else {
+          this.authRoleService.setRole(roleFromServer);
+        }
+
+        this.finalizeOAuthLogin(roleFromServer);
+      });
     } catch (err) {
       console.error('Login failed', err);
-      this.loginError = 'Unable to login right now. Please retry.';
-    } finally {
-      this.isAuthenticating = false;
+      this.ngZone.run(() => {
+        this.loginError = 'Unable to login right now. Please retry.';
+        this.isAuthenticating = false;
+      });
     }
   }
 
@@ -238,13 +294,17 @@ export class AppComponent implements AfterViewInit {
 
     const fromSignup = this.signupMode;
 
-    fetch('http://localhost:8080/api/auth/google', {
+    // Use unified login endpoint for all user types
+    fetch('http://localhost:8080/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ idToken: credential }),
     })
       .then(async (res) => {
-        if (!res.ok) throw new Error('Verification failed');
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({ message: 'Verification failed' }));
+          throw new Error(errorData.message || 'Verification failed');
+        }
         return res.json();
       })
       .then((data) => {
@@ -252,7 +312,14 @@ export class AppComponent implements AfterViewInit {
           this.userName = data?.name || '';
           this.userEmail = data?.email || '';
           const roleFromServer = (data?.role as UserRole) || 'STUDENT';
-          this.authRoleService.setRole(roleFromServer);
+          const token = data?.token; // JWT token from backend
+          
+          // Store role and JWT token for production-ready authentication
+          if (token) {
+            this.authRoleService.setRole(roleFromServer, token);
+          } else {
+            this.authRoleService.setRole(roleFromServer);
+          }
 
           if (fromSignup) {
             this.signupPreview = {
@@ -278,7 +345,8 @@ export class AppComponent implements AfterViewInit {
 
           this.userName = payload?.name || payload?.given_name || '';
           this.userEmail = payload?.email || '';
-            this.authRoleService.setRole('STUDENT');
+          // For signup, default to STUDENT role
+          this.authRoleService.setRole('STUDENT');
 
           if (fromSignup) {
             this.signupPreview = {
@@ -332,7 +400,15 @@ export class AppComponent implements AfterViewInit {
           this.userName = data?.name || this.signupPreview?.name || '';
           this.userEmail = data?.email || this.signupPreview?.email || '';
           const roleFromServer = (data?.role as UserRole) || 'STUDENT';
-          this.authRoleService.setRole(roleFromServer);
+          const token = data?.token; // JWT token from backend
+          
+          // Store role and JWT token for production-ready authentication
+          if (token) {
+            this.authRoleService.setRole(roleFromServer, token);
+          } else {
+            this.authRoleService.setRole(roleFromServer);
+          }
+          
           this.signupMode = false;
           this.signupPreview = null;
           this.signupMessage = '';

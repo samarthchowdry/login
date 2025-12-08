@@ -34,11 +34,16 @@ export class CourseService {
       }
     });
 
-    return this.http.get<Course[]>(this.apiUrl, { params });
+    return this.http.get<Course[]>(this.apiUrl, {
+      params,
+      ...this.authRoleService.createRoleOptions()
+    });
   }
 
   getCourseById(id: number): Observable<Course> {
-    return this.http.get<Course>(`${this.apiUrl}/${id}`);
+    return this.http.get<Course>(`${this.apiUrl}/${id}`, 
+      this.authRoleService.createRoleOptions()
+    );
   }
 
   createCourse(course: Course): Observable<Course> {
@@ -87,7 +92,9 @@ export class CourseService {
   }
 
   getCoursesCount(): Observable<number> {
-    return this.http.get<number>(`${this.apiUrl}/count`);
+    return this.http.get<number>(`${this.apiUrl}/count`, 
+      this.authRoleService.createRoleOptions()
+    );
   }
 }
 

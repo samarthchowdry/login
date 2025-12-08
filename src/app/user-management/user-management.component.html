@@ -1,0 +1,154 @@
+<div class="user-management-container">
+  <div class="header-section">
+    <h1>User Management</h1>
+    <p class="subtitle">Create new administrators and teachers</p>
+    <p class="warning">⚠️ This is an admin-only feature. Use with caution.</p>
+  </div>
+
+  <div *ngIf="!isAdmin" class="error-container">
+    <div class="error-message">
+      {{ errorMessage }}
+    </div>
+  </div>
+
+  <div *ngIf="isAdmin" class="form-container">
+    <form (ngSubmit)="onSubmit()" class="user-form">
+      <div class="form-group">
+        <label for="email">Email Address *</label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          [(ngModel)]="formData.email"
+          placeholder="user@example.com"
+          required
+          autocomplete="email"
+          [disabled]="isSubmitting"
+        />
+        <small class="form-hint">This will be used as the username for login</small>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password *</label>
+        <input
+          type="password"
+          id="password"
+          name="password"
+          [(ngModel)]="formData.password"
+          placeholder="Enter password (min 6 characters)"
+          required
+          minlength="6"
+          autocomplete="new-password"
+          [disabled]="isSubmitting"
+        />
+        <small class="form-hint">Minimum 6 characters. Password will be securely hashed.</small>
+      </div>
+
+      <div class="form-group">
+        <label for="role">Role *</label>
+        <select
+          id="role"
+          name="role"
+          [(ngModel)]="formData.role"
+          (change)="onRoleChange()"
+          required
+          [disabled]="isSubmitting"
+        >
+          <option *ngFor="let role of roles" [value]="role.value">
+            {{ role.label }}
+          </option>
+        </select>
+        <small class="form-hint">Select ADMIN for full access or TEACHER for limited access</small>
+      </div>
+
+      <div class="form-group">
+        <label for="fullName">Full Name</label>
+        <input
+          type="text"
+          id="fullName"
+          name="fullName"
+          [(ngModel)]="formData.fullName"
+          placeholder="John Doe (optional)"
+          autocomplete="name"
+          [disabled]="isSubmitting"
+        />
+        <small class="form-hint">Optional: User's full name</small>
+      </div>
+
+      <div *ngIf="errorMessage" class="error-message">
+        {{ errorMessage }}
+      </div>
+
+      <div *ngIf="successMessage" class="success-message">
+        {{ successMessage }}
+      </div>
+
+      <button
+        type="submit"
+        class="submit-btn"
+        [disabled]="isSubmitting"
+      >
+        <span *ngIf="!isSubmitting">Create User</span>
+        <span *ngIf="isSubmitting">Creating...</span>
+      </button>
+    </form>
+
+    <div class="info-section">
+      <h3>Important Notes:</h3>
+      <ul>
+        <li>Users created here can login using their email and password</li>
+        <li>Passwords are securely hashed using BCrypt</li>
+        <li>Administrators have full system access</li>
+        <li>Teachers have access to student and course management</li>
+        <li>Email addresses must be unique</li>
+        <li>Users can also login via Google Sign-In if their email matches</li>
+      </ul>
+    </div>
+
+    <div class="divider-section">
+      <hr />
+    </div>
+
+    <div class="delete-section">
+      <h3>Delete Teacher</h3>
+      <p class="subtitle">Remove a teacher and their associated login.</p>
+
+      <div class="form-group">
+        <label for="deleteEmail">Teacher Email *</label>
+        <input
+          type="email"
+          id="deleteEmail"
+          name="deleteEmail"
+          [(ngModel)]="deleteEmail"
+          placeholder="teacher@example.com"
+          required
+          autocomplete="email"
+          [disabled]="isDeleting"
+        />
+      </div>
+
+      <div *ngIf="deleteErrorMessage" class="error-message">
+        {{ deleteErrorMessage }}
+      </div>
+
+      <div *ngIf="deleteSuccessMessage" class="success-message">
+        {{ deleteSuccessMessage }}
+      </div>
+
+      <button
+        type="button"
+        class="danger-btn"
+        (click)="deleteTeacher()"
+        [disabled]="isDeleting"
+      >
+        <span *ngIf="!isDeleting">Delete Teacher</span>
+        <span *ngIf="isDeleting">Deleting...</span>
+      </button>
+      <small class="form-hint">This action is irreversible.</small>
+    </div>
+  </div>
+</div>
+
+
+
+

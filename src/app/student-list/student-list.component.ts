@@ -21,7 +21,7 @@ export class StudentListComponent implements OnInit, OnDestroy {
   bulkMessage = '';
   bulkUploading = false;
   userRole: UserRole = 'STUDENT';
-  private roleSub?: Subscription;
+  private subscriptions = new Subscription();
 
   filters = {
     id: '',
@@ -42,14 +42,16 @@ export class StudentListComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.roleSub = this.authRoleService.role$.subscribe((role) => {
-      this.userRole = role;
-    });
+    this.subscriptions.add(
+      this.authRoleService.role$.subscribe((role) => {
+        this.userRole = role;
+      })
+    );
     this.loadStudents();
   }
 
   ngOnDestroy(): void {
-    this.roleSub?.unsubscribe();
+    this.subscriptions.unsubscribe();
   }
 
   // Bulk upload
@@ -63,20 +65,22 @@ export class StudentListComponent implements OnInit, OnDestroy {
     const file = input.files[0];
     this.bulkUploading = true;
     this.bulkMessage = '';
-    this.studentService.bulkUpload(file).subscribe({
-      next: (msg) => {
-        this.bulkMessage = msg;
-        this.bulkUploading = false;
-        this.loadStudents();
-        if (input) input.value = '';
-      },
-      error: (err) => {
-        console.error('Bulk upload failed:', err);
-        this.bulkMessage = 'Bulk upload failed. Please check file format and try again.';
-        this.bulkUploading = false;
-        if (input) input.value = '';
-      }
-    });
+    this.subscriptions.add(
+      this.studentService.bulkUpload(file).subscribe({
+        next: (msg) => {
+          this.bulkMessage = msg;
+          this.bulkUploading = false;
+          this.loadStudents();
+          if (input) input.value = '';
+        },
+        error: (err) => {
+          console.error('Bulk upload failed:', err);
+          this.bulkMessage = 'Bulk upload failed. Please check file format and try again.';
+          this.bulkUploading = false;
+          if (input) input.value = '';
+        }
+      })
+    );
   }
 
   /**  Load Students from Backend */
@@ -90,20 +94,22 @@ export class StudentListComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.errorMessage = '';
 
-    this.studentService.getStudents(this.filters).subscribe({
-      next: (students) => {
-        this.students = students;
-        this.filteredStudents = [...this.students];
-        this.isLoading = false;
-        this.currentPage = 1;
-        console.log(' Students loaded:', students);
-      },
-      error: (error) => {
-        console.error('Error loading students:', error);
-        this.errorMessage = 'Error loading students. Please try again.';
-        this.isLoading = false;
-      }
-    });
+    this.subscriptions.add(
+      this.studentService.getStudents(this.filters).subscribe({
+        next: (students) => {
+          this.students = students;
+          this.filteredStudents = [...this.students];
+          this.isLoading = false;
+          this.currentPage = 1;
+          console.log(' Students loaded:', students);
+        },
+        error: (error) => {
+          console.error('Error loading students:', error);
+          this.errorMessage = 'Error loading students. Please try again.';
+          this.isLoading = false;
+        }
+      })
+    );
   }
 
   //Search Button Click 
@@ -181,26 +187,28 @@ export class StudentListComponent implements OnInit, OnDestroy {
     }
     if (!confirm('Are you sure you want to delete this student?')) return;
 
-    this.studentService.deleteStudent(id).subscribe({
-      next: () => {
-        console.log(`Student with ID ${id} deleted successfully`);
+    this.subscriptions.add(
+      this.studentService.deleteStudent(id).subscribe({
+        next: () => {
+          console.log(`Student with ID ${id} deleted successfully`);
 
-        // Remove deleted student locally (avoids reloading)
-        this.students = this.students.filter(student => student.id !== id);
-        this.filteredStudents = this.filteredStudents.filter(student => student.id !== id);
+          // Remove deleted student locally (avoids reloading)
+          this.students = this.students.filter(student => student.id !== id);
+          this.filteredStudents = this.filteredStudents.filter(student => student.id !== id);
 
-        // Adjust pagination safely
-        if (this.currentPage > this.totalPages) {
-          this.currentPage = this.totalPages || 1;
+          // Adjust pagination safely
+          if (this.currentPage > this.totalPages) {
+            this.currentPage = this.totalPages || 1;
+          }
+
+          alert('Student deleted successfully.');
+        },
+        error: (error) => {
+          console.error('Error deleting student:', error);
+          alert('Error deleting student. Please try again.');
         }
-
-        alert('Student deleted successfully.');
-      },
-      error: (error) => {
-        console.error('Error deleting student:', error);
-        alert('Error deleting student. Please try again.');
-      }
-    });
+      })
+    );
   }
 
   get canManageStudents(): boolean {
@@ -246,27 +254,29 @@ export class StudentListComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.errorMessage = '';
 
-    this.studentService.getStudentById(parsedId).subscribe({
-      next: (student) => {
-        this.students = student ? [student] : [];
-        this.filteredStudents = [...this.students];
-        this.currentPage = 1;
-        this.isLoading = false;
-        if (!student) {
-          this.errorMessage = `No student found with ID ${parsedId}.`;
+    this.subscriptions.add(
+      this.studentService.getStudentById(parsedId).subscribe({
+        next: (student) => {
+          this.students = student ? [student] : [];
+          this.filteredStudents = [...this.students];
+          this.currentPage = 1;
+          this.isLoading = false;
+          if (!student) {
+            this.errorMessage = `No student found with ID ${parsedId}.`;
+          }
+        },
+        error: (error) => {
+          console.error('Error fetching student by ID:', error);
+          if (error.status === 404) {
+            this.errorMessage = `No student found with ID ${parsedId}.`;
+          } else {
+            this.errorMessage = 'Error searching by ID. Please try again.';
+          }
+          this.students = [];
+          this.filteredStudents = [];
+          this.isLoading = false;
         }
-      },
-      error: (error) => {
-        console.error('Error fetching student by ID:', error);
-        if (error.status === 404) {
-          this.errorMessage = `No student found with ID ${parsedId}.`;
-        } else {
-          this.errorMessage = 'Error searching by ID. Please try again.';
-        }
-        this.students = [];
-        this.filteredStudents = [];
-        this.isLoading = false;
-      }
-    });
+      })
+    );
   }
 }

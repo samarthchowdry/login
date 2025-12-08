@@ -1,0 +1,249 @@
+<div class="student-management-container">
+  <div class="header-section">
+    <h1>Student Management</h1>
+    <p class="subtitle">Create and manage students in the system</p>
+    <p class="warning">⚠️ This feature is available to teachers and administrators.</p>
+  </div>
+
+  <div *ngIf="!isTeacher && !isAdmin" class="error-container">
+    <div class="error-message">
+      {{ errorMessage }}
+    </div>
+  </div>
+
+  <div *ngIf="isTeacher || isAdmin" class="management-content">
+    <!-- Create New Student Form -->
+    <div class="form-section">
+      <h2>Create New Student</h2>
+      <form (ngSubmit)="onSubmit()" class="student-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="name">Name *</label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              [(ngModel)]="formData.name"
+              placeholder="Enter student name"
+              required
+              [disabled]="isSubmitting"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="dob">Date of Birth *</label>
+            <input
+              type="date"
+              id="dob"
+              name="dob"
+              [(ngModel)]="formData.dob"
+              required
+              [disabled]="isSubmitting"
+            />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="email">Email Address *</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              [(ngModel)]="formData.email"
+              placeholder="student@example.com"
+              required
+              autocomplete="email"
+              [disabled]="isSubmitting"
+            />
+            <small class="form-hint">This will be used for login and notifications</small>
+          </div>
+
+          <div class="form-group">
+            <label for="branch">Branch *</label>
+            <input
+              type="text"
+              id="branch"
+              name="branch"
+              [(ngModel)]="formData.branch"
+              placeholder="e.g., Computer Science"
+              required
+              [disabled]="isSubmitting"
+            />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password *</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            [(ngModel)]="formData.password"
+            placeholder="Enter password (min 6 characters)"
+            required
+            minlength="6"
+            autocomplete="new-password"
+            [disabled]="isSubmitting"
+          />
+          <small class="form-hint">Passwords are stored securely. Minimum 6 characters.</small>
+        </div>
+
+        <div class="form-group">
+          <label for="address">Address *</label>
+          <textarea
+            id="address"
+            name="address"
+            [(ngModel)]="formData.address"
+            placeholder="Enter student address"
+            rows="3"
+            required
+            [disabled]="isSubmitting"
+          ></textarea>
+        </div>
+
+        <div class="form-group" *ngIf="courses.length > 0">
+          <label>Select Courses (Optional)</label>
+          <div class="course-checkboxes">
+            <div class="course-checkbox-item" *ngFor="let course of courses">
+              <label class="checkbox-label">
+                <input
+                  type="checkbox"
+                  [checked]="isCourseSelected(course.id!)"
+                  (change)="toggleCourse(course.id!)"
+                  [value]="course.id"
+                  [disabled]="isSubmitting"
+                />
+                <span class="checkbox-text">
+                  <strong>{{ course.code }}</strong> - {{ course.name }}
+                  <span *ngIf="course.credits" class="credits">({{ course.credits }} credits)</span>
+                </span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="errorMessage" class="error-message">
+          {{ errorMessage }}
+        </div>
+
+        <div *ngIf="successMessage" class="success-message">
+          {{ successMessage }}
+        </div>
+
+        <button
+          type="submit"
+          class="submit-btn"
+          [disabled]="isSubmitting"
+        >
+          <span *ngIf="!isSubmitting">Create Student</span>
+          <span *ngIf="isSubmitting">Creating...</span>
+        </button>
+      </form>
+    </div>
+
+    <!-- Students List -->
+    <div class="students-list-section">
+      <div class="section-header">
+        <h2>All Students</h2>
+        <button (click)="loadStudents()" class="refresh-btn" [disabled]="isLoadingStudents">
+          {{ isLoadingStudents ? 'Loading...' : 'Refresh' }}
+        </button>
+      </div>
+
+      <div *ngIf="isLoadingStudents" class="loading-message">
+        Loading students...
+      </div>
+
+      <div *ngIf="!isLoadingStudents && students.length === 0" class="empty-message">
+        No students found. Create your first student above.
+      </div>
+
+      <div *ngIf="!isLoadingStudents && students.length > 0" class="students-table-container">
+        <table class="students-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>DOB</th>
+              <th>Branch</th>
+              <th>Address</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let student of students">
+              <td>{{ student.id }}</td>
+              <td>{{ student.name }}</td>
+              <td>{{ student.email }}</td>
+              <td>{{ formatDate(student.dob) }}</td>
+              <td>{{ student.branch }}</td>
+              <td>{{ student.address }}</td>
+              <td class="actions-cell">
+                <a [routerLink]="['/edit-student', student.id]" class="edit-link">Edit</a>
+                <a [routerLink]="['/marks-card', student.id]" class="marks-link">Marks</a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Delete Student Section -->
+    <div class="divider-section">
+      <hr />
+    </div>
+
+    <div class="delete-section">
+      <h3>Delete Student</h3>
+      <p class="subtitle">Remove a student from the system by email address.</p>
+
+      <div class="form-group">
+        <label for="deleteEmail">Student Email *</label>
+        <input
+          type="email"
+          id="deleteEmail"
+          name="deleteEmail"
+          [(ngModel)]="deleteEmail"
+          placeholder="student@example.com"
+          required
+          autocomplete="email"
+          [disabled]="isDeleting"
+        />
+      </div>
+
+      <div *ngIf="deleteErrorMessage" class="error-message">
+        {{ deleteErrorMessage }}
+      </div>
+
+      <div *ngIf="deleteSuccessMessage" class="success-message">
+        {{ deleteSuccessMessage }}
+      </div>
+
+      <button
+        type="button"
+        class="danger-btn"
+        (click)="deleteStudent()"
+        [disabled]="isDeleting"
+      >
+        <span *ngIf="!isDeleting">Delete Student</span>
+        <span *ngIf="isDeleting">Deleting...</span>
+      </button>
+      <small class="form-hint">This action is irreversible. All student data, marks, and course enrollments will be deleted.</small>
+    </div>
+
+    <div class="info-section">
+      <h3>Important Notes:</h3>
+      <ul>
+        <li>Students can login using their email and password or Google Sign-In</li>
+        <li>Email addresses must be unique</li>
+        <li>Students will receive a welcome email upon creation</li>
+        <li>You can enroll students in courses during creation or later</li>
+        <li>All student data including marks and enrollments will be deleted when a student is removed</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+

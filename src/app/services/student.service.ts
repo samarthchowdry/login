@@ -10,6 +10,7 @@ export interface Student {
   email: string;
   address: string;
   branch: string;
+  password?: string;
   courseIds?: number[];
   courseNames?: string[];
   marks?: StudentMark[];
@@ -118,12 +119,17 @@ export class StudentService {
       }
     });
 
-    return this.http.get<Student[]>(this.apiUrl, { params });
+    return this.http.get<Student[]>(this.apiUrl, {
+      params,
+      ...this.authRoleService.createRoleOptions()
+    });
   }
 
   /**  Get single student by ID */
   getStudentById(id: number): Observable<Student> {
-    return this.http.get<Student>(`${this.apiUrl}/${id}`);
+    return this.http.get<Student>(`${this.apiUrl}/${id}`, 
+      this.authRoleService.createRoleOptions()
+    );
   }
 
   /** Create new student */
@@ -185,32 +191,30 @@ export class StudentService {
 
   /** Get all marks for a student */
   getMarks(studentId: number): Observable<StudentMark[]> {
-    return this.http.get<StudentMark[]>(`${this.apiUrl}/${studentId}/marks`, {
-      headers: this.authRoleService.createRoleHeaders(),
-    });
+    return this.http.get<StudentMark[]>(`${this.apiUrl}/${studentId}/marks`, 
+      this.authRoleService.createRoleOptions()
+    );
   }
 
   /** Get marks card summary */
   getMarksCard(studentId: number): Observable<MarksCard> {
-    return this.http.get<MarksCard>(`${this.apiUrl}/${studentId}/marks-card`, {
-      headers: this.authRoleService.createRoleHeaders(),
-    });
+    return this.http.get<MarksCard>(`${this.apiUrl}/${studentId}/marks-card`, 
+      this.authRoleService.createRoleOptions()
+    );
   }
 
   /** Fetch performance summary for dashboard */
   getPerformanceSummary(): Observable<StudentPerformance[]> {
-    return this.http.get<StudentPerformance[]>(`${this.apiUrl}/performance`, {
-      headers: this.authRoleService.createRoleHeaders(),
-    });
+    return this.http.get<StudentPerformance[]>(`${this.apiUrl}/performance`, 
+      this.authRoleService.createRoleOptions()
+    );
   }
 
   /** Generate consolidated student progress report */
   getProgressReport(): Observable<StudentProgressReportResponse> {
     return this.http.get<StudentProgressReportResponse>(
       `http://localhost:8080/api/reports/student-progress`,
-      {
-        headers: this.authRoleService.createRoleHeaders(),
-      }
+      this.authRoleService.createRoleOptions()
     );
   }
 
@@ -219,15 +223,15 @@ export class StudentService {
     return this.http.post<string>(
       `http://localhost:8080/api/reports/student-progress/email`,
       report,
-      {
-        headers: this.authRoleService.createRoleHeaders(),
-      }
+      this.authRoleService.createRoleOptions()
     );
   }
 
   /** Fetch total student count */
   getStudentsCount(): Observable<number> {
-    return this.http.get<number>(`${this.apiUrl}/count`);
+    return this.http.get<number>(`${this.apiUrl}/count`, 
+      this.authRoleService.createRoleOptions()
+    );
   }
 
 }

@@ -1,9 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { CourseService, Course } from '../services/course.service';
 import { StudentService, Student } from '../services/student.service';
 import { AuthRoleService } from '../services/auth-role.service';
+import { Subscription } from 'rxjs';
+import { take } from 'rxjs/operators';
 
 @Component({
   selector: 'app-student-enroll',
@@ -12,7 +14,7 @@ import { AuthRoleService } from '../services/auth-role.service';
   templateUrl: './student-enroll.component.html',
   styleUrls: ['./student-enroll.component.css']
 })
-export class StudentEnrollComponent implements OnInit {
+export class StudentEnrollComponent implements OnInit, OnDestroy {
   studentId: number | null = null;
   student: Student | null = null;
   allCourses: Course[] = [];
@@ -20,6 +22,7 @@ export class StudentEnrollComponent implements OnInit {
   isLoading = false;
   errorMessage = '';
   successMessage = '';
+  private subscriptions = new Subscription();
 
   constructor(
     private route: ActivatedRoute,
@@ -36,42 +39,53 @@ export class StudentEnrollComponent implements OnInit {
       this.router.navigate(['/student-list']);
       return;
     }
-    this.route.paramMap.subscribe(params => {
-      const id = params.get('id');
-      if (id) {
-        this.studentId = +id;
-        this.loadStudent();
-        this.loadAllCourses();
-      }
-    });
+    // Use take(1) to automatically complete subscription after first emission
+    this.subscriptions.add(
+      this.route.paramMap.pipe(take(1)).subscribe(params => {
+        const id = params.get('id');
+        if (id) {
+          this.studentId = +id;
+          this.loadStudent();
+          this.loadAllCourses();
+        }
+      })
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
   }
 
   loadStudent(): void {
     if (!this.studentId) return;
 
-    this.studentService.getStudentById(this.studentId).subscribe({
-      next: (student) => {
-        this.student = student;
-        // Get currently enrolled course IDs
-        this.enrolledCourseIds = this.normalizeCourseIds(student.courseIds);
-      },
-      error: (error) => {
-        console.error('Error loading student:', error);
-        this.errorMessage = 'Error loading student information';
-      }
-    });
+    this.subscriptions.add(
+      this.studentService.getStudentById(this.studentId).subscribe({
+        next: (student) => {
+          this.student = student;
+          // Get currently enrolled course IDs
+          this.enrolledCourseIds = this.normalizeCourseIds(student.courseIds);
+        },
+        error: (error) => {
+          console.error('Error loading student:', error);
+          this.errorMessage = 'Error loading student information';
+        }
+      })
+    );
   }
 
   loadAllCourses(): void {
-    this.courseService.getCourses({}).subscribe({
-      next: (courses) => {
-        this.allCourses = courses;
-      },
-      error: (error) => {
-        console.error('Error loading courses:', error);
-        this.errorMessage = 'Error loading courses';
-      }
-    });
+    this.subscriptions.add(
+      this.courseService.getCourses({}).subscribe({
+        next: (courses) => {
+          this.allCourses = courses;
+        },
+        error: (error) => {
+          console.error('Error loading courses:', error);
+          this.errorMessage = 'Error loading courses';
+        }
+      })
+    );
   }
 
   toggleEnrollment(courseId: number): void {
@@ -122,39 +136,41 @@ export class StudentEnrollComponent implements OnInit {
     console.log('Updating enrollment with data:', studentData);
     console.log('Course IDs:', this.enrolledCourseIds);
 
-    this.studentService.updateStudent(this.studentId, studentData).subscribe({
-      next: (updatedStudent) => {
-        console.log('Successfully updated student:', updatedStudent);
-        this.successMessage = 'Enrollment updated successfully!';
-        this.isLoading = false;
-        // Reload student to reflect changes
-        this.loadStudent();
-        
-        // Navigate back after 2 seconds
-        setTimeout(() => {
-          this.router.navigate(['/student-list']);
-        }, 2000);
-      },
-      error: (error) => {
-        console.error('Error updating enrollment:', error);
-        console.error('Error status:', error.status);
-        console.error('Error details:', error.error);
-        
-        let errorMsg = 'Error updating enrollment. Please try again.';
-        if (error.error) {
-          if (typeof error.error === 'string') {
-            errorMsg = error.error;
-          } else if (error.error.message) {
-            errorMsg = error.error.message;
-          } else if (error.error.error) {
-            errorMsg = error.error.error;
+    this.subscriptions.add(
+      this.studentService.updateStudent(this.studentId, studentData).subscribe({
+        next: (updatedStudent) => {
+          console.log('Successfully updated student:', updatedStudent);
+          this.successMessage = 'Enrollment updated successfully!';
+          this.isLoading = false;
+          // Reload student to reflect changes
+          this.loadStudent();
+          
+          // Navigate back after 2 seconds
+          setTimeout(() => {
+            this.router.navigate(['/student-list']);
+          }, 2000);
+        },
+        error: (error) => {
+          console.error('Error updating enrollment:', error);
+          console.error('Error status:', error.status);
+          console.error('Error details:', error.error);
+          
+          let errorMsg = 'Error updating enrollment. Please try again.';
+          if (error.error) {
+            if (typeof error.error === 'string') {
+              errorMsg = error.error;
+            } else if (error.error.message) {
+              errorMsg = error.error.message;
+            } else if (error.error.error) {
+              errorMsg = error.error.error;
+            }
           }
+          
+          this.errorMessage = errorMsg;
+          this.isLoading = false;
         }
-        
-        this.errorMessage = errorMsg;
-        this.isLoading = false;
-      }
-    });
+      })
+    );
   }
 
   cancel(): void {
